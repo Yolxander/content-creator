@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import { Search, Plus, Upload, MoreHorizontal, Edit, Trash2, Grid3X3, List, ChevronDown, Filter, PanelLeft, Users, LayoutList, BookOpen, Timer, Library, Trophy, Palette, Clapperboard, BarChart3, Settings, Bell, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -110,6 +112,15 @@ const getStatusColor = (status: string) => {
 }
 
 export default function Page() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.replace("/auth")
+    }
+  }, [user, loading, router])
+
   const [selectedCourses, setSelectedCourses] = useState<number[]>([])
   const [viewMode, setViewMode] = useState<"grid" | "list">("list")
   const [contentType, setContentType] = useState("articles")

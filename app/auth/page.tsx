@@ -54,7 +54,9 @@ export default function AuthPage() {
           {/* Logo */}
           <div className="flex items-center mb-8">
             <Image src="/logo/lmc-logo.png" alt="Sellora Logo" className='w-10 h-10 rounded-md' width={40} height={40} />
-            <span className="ml-3 text-2xl font-bold text-[#05AFF2]">Light Merjj CMS</span>
+            <span className="ml-3 text-2xl font-bold text-[#05AFF2]">
+              Light Merjj <span style={{ color: '#F2C438' }}>CMS</span>
+            </span>
           </div>
 
           {/* Form */}
@@ -181,7 +183,7 @@ export default function AuthPage() {
         {/* Right Side - Marketing */}
         <div className="hidden md:flex w-1/2 bg-[#05AFF2] flex-col items-center justify-center relative p-10 rounded-l-3xl">
           <div className="text-white text-center text-3xl font-extrabold max-w-xl mb-6 text-left leading-snug drop-shadow-xl">
-            All in one Content Management Platform<br />
+            All in one Content Management <span style={{ color: '#F2C438' }}>Platform</span><br />
             <span className="text-2xl font-normal block mt-2 opacity-80">Quickly. Globally.</span>
           </div>
           <div className="w-full flex justify-center">
