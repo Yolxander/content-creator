@@ -6,6 +6,15 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Users, FileText, Clock, Plus, Upload, UserPlus, TrendingUp, BarChart3, CheckCircle, UserCheck, ChevronRight, User } from "lucide-react"
 import SidebarNav from "@/components/ui/SidebarNav"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Building2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { supabase } from "@/lib/supabase"
+
+type Organization = {
+  id: string
+  name: string
+}
 
 const mockContentSummary = {
   total: 128,
@@ -41,6 +50,58 @@ const mockPerformance = {
 }
 
 export default function OverviewPage() {
+  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
+
+  useEffect(() => {
+    async function loadOrganizations() {
+      try {
+        const { data: orgsData } = await supabase
+          .from('organizations')
+          .select('*')
+          .order('name')
+        setOrganizations(orgsData || [])
+        
+        // Get current user's organization
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', user.id)
+            .single()
+          
+          if (profile?.organization_id) {
+            const currentOrg = orgsData?.find(org => org.id === profile.organization_id)
+            setCurrentOrg(currentOrg || null)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading organizations:', error)
+      }
+    }
+    loadOrganizations()
+  }, [])
+
+  const handleOrgChange = async (orgId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ organization_id: orgId })
+        .eq('id', user.id)
+
+      if (error) throw error
+
+      const newOrg = organizations.find(org => org.id === orgId)
+      setCurrentOrg(newOrg || null)
+    } catch (error) {
+      console.error('Error updating organization:', error)
+    }
+  }
+
   return (
     <div className="flex h-screen bg-[#f6f3ef]">
       <SidebarNav />
@@ -56,10 +117,25 @@ export default function OverviewPage() {
           <div className="flex items-center justify-between">
             <h1 className="text-4xl font-extrabold text-[#05AFF2] tracking-tight">Overview</h1>
             <div className="flex gap-3">
-              <Button className="bg-white text-[#05AFF2] rounded-full px-6 py-3 flex gap-2 shadow-md border border-[#05AFF2] hover:bg-[#e6f8fd] font-semibold">
-                <Upload className="w-5 h-5" />
-                Import
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="bg-white text-[#05AFF2] rounded-full px-6 py-3 flex gap-2 shadow-md border border-[#05AFF2] hover:bg-[#e6f8fd] font-semibold">
+                    <Building2 className="w-5 h-5" />
+                    {currentOrg?.name || 'Select Organization'}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  {organizations.map((org) => (
+                    <DropdownMenuItem
+                      key={org.id}
+                      onClick={() => handleOrgChange(org.id)}
+                      className="cursor-pointer"
+                    >
+                      {org.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button className="bg-[#05AFF2] text-white rounded-full px-6 py-3 flex gap-2 shadow-md hover:bg-[#059fd2] font-semibold">
                 <Plus className="w-5 h-5 text-white" />
                 Create

@@ -156,7 +156,7 @@ export default function SidebarNav({ onContentTypeChange }: SidebarNavProps) {
       <div className="flex items-center justify-between p-4 hover:bg-[#e6f8fd] rounded-2xl mt-4 cursor-pointer transition-all">
         <Link href="/profile" className="flex items-center gap-4 flex-1">
         
-          giut<div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0">
             <div className="text-lg font-bold text-[#05AFF2] truncate">
               {userProfile?.full_name || 'Loading...'}
             </div>

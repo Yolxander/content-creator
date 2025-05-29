@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { BookOpen, ChevronRight, Upload, Plus, Search, Filter, Grid3X3, List, Edit, MoreHorizontal, Trash2, ChevronDown, FileText, Headphones, Layers, Rss, ArrowRight, ArrowLeft } from "lucide-react"
+import { BookOpen, ChevronRight, Upload, Plus, Search, Filter, Grid3X3, List, Edit, MoreHorizontal, Trash2, ChevronDown, FileText, Headphones, Layers, Rss, ArrowRight, ArrowLeft, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +17,12 @@ import ModuleWizard from "@/app/content/wizards/ModuleWizard"
 import FeedWizard from "@/app/content/wizards/FeedWizard"
 import { DateRange } from "react-day-picker"
 import { useSearchParams, useRouter } from "next/navigation"
+import { supabase } from "@/lib/supabase"
+
+type Organization = {
+  id: string
+  name: string
+}
 
 const courses = [
   {
@@ -125,6 +131,8 @@ export default function MainDashboardContent() {
   const [contentType, setContentType] = useState("articles")
   const [selectedItems, setSelectedItems] = useState<string[]>([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [organizations, setOrganizations] = useState<Organization[]>([])
+  const [currentOrg, setCurrentOrg] = useState<Organization | null>(null)
   const [dateRange, setDateRange] = useState<DateRange | undefined>({
     from: undefined,
     to: undefined,
@@ -151,6 +159,55 @@ export default function MainDashboardContent() {
     autoTranslate: false,
     approvals: []
   })
+
+  useEffect(() => {
+    async function loadOrganizations() {
+      try {
+        const { data: orgsData } = await supabase
+          .from('organizations')
+          .select('*')
+          .order('name')
+        setOrganizations(orgsData || [])
+        
+        // Get current user's organization
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('organization_id')
+            .eq('id', user.id)
+            .single()
+          
+          if (profile?.organization_id) {
+            const currentOrg = orgsData?.find(org => org.id === profile.organization_id)
+            setCurrentOrg(currentOrg || null)
+          }
+        }
+      } catch (error) {
+        console.error('Error loading organizations:', error)
+      }
+    }
+    loadOrganizations()
+  }, [])
+
+  const handleOrgChange = async (orgId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ organization_id: orgId })
+        .eq('id', user.id)
+
+      if (error) throw error
+
+      const newOrg = organizations.find(org => org.id === orgId)
+      setCurrentOrg(newOrg || null)
+    } catch (error) {
+      console.error('Error updating organization:', error)
+    }
+  }
 
   // Sync contentType with URL query param
   useEffect(() => {
@@ -643,10 +700,25 @@ export default function MainDashboardContent() {
               </Button>
             ) : (
               <>
-                <Button className="bg-white text-[#05AFF2] rounded-full px-6 py-3 flex gap-2 shadow-md border border-[#05AFF2] hover:bg-[#e6f8fd] font-semibold">
-                  <Upload className="w-5 h-5" />
-                  Import
-                </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button className="bg-white text-[#05AFF2] rounded-full px-6 py-3 flex gap-2 shadow-md border border-[#05AFF2] hover:bg-[#e6f8fd] font-semibold">
+                      <Building2 className="w-5 h-5" />
+                      {currentOrg?.name || 'Select Organization'}
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    {organizations.map((org) => (
+                      <DropdownMenuItem
+                        key={org.id}
+                        onClick={() => handleOrgChange(org.id)}
+                        className="cursor-pointer"
+                      >
+                        {org.name}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
                 <Button
                   className="bg-[#05AFF2] text-white rounded-full px-6 py-3 flex gap-2 shadow-md hover:bg-[#059fd2] font-semibold"
                   onClick={handleCreateClick}
