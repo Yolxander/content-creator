@@ -622,7 +622,15 @@ export default function MainDashboardContent() {
                     ? "Feed"
                     : "Article"
                 }`
-              : "Content Management"}
+              : (
+                  contentType === "audio"
+                    ? "Audio"
+                    : contentType === "modules"
+                    ? "Modules"
+                    : contentType === "feeds"
+                    ? "Feeds"
+                    : "Articles"
+                )}
           </h1>
           <div className="flex gap-3">
             {isCreating ? (
