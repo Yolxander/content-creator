@@ -100,16 +100,14 @@ export default function SidebarNav({ onContentTypeChange }: SidebarNavProps) {
         </nav>
       </div>
       {/* User Profile */}
-      <div className="flex items-center gap-4 p-4 hover:bg-[#e6f8fd] rounded-2xl mt-4 cursor-pointer transition-all">
-        <Avatar className="w-12 h-12 rounded-full shadow-md">
-          <AvatarImage src="/placeholder.svg?height=32&width=32" />
-          <AvatarFallback>LS</AvatarFallback>
-        </Avatar>
-        <div className="flex-1 min-w-0">
-          <div className="text-lg font-bold text-[#05AFF2] truncate">Lena Steiner</div>
-        </div>
-        <ChevronDown className="w-5 h-5 text-[#05AFF2]" />
-      </div>
+      <Link href="/profile" legacyBehavior>
+        <a className="flex items-center gap-4 p-4 hover:bg-[#e6f8fd] rounded-2xl mt-4 cursor-pointer transition-all">
+       
+          <div className="flex-1 min-w-0">
+            <div className="text-lg font-bold text-[#05AFF2] truncate">Lena Steiner</div>
+          </div>
+        </a>
+      </Link>
     </aside>
   )
 } 
