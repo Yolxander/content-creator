@@ -1,9 +1,15 @@
-import { PanelLeft, Users, LayoutList, FileText, Headphones, Layers, Rss, BarChart3, Settings, ChevronDown } from "lucide-react"
+import { PanelLeft, Users, LayoutList, FileText, Headphones, Layers, Rss, BarChart3, Settings, ChevronDown, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
-import { usePathname, useSearchParams } from "next/navigation"
+import { usePathname, useSearchParams, useRouter } from "next/navigation"
+import { createClient } from '@supabase/supabase-js'
+import { useToast } from "@/components/ui/use-toast"
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 const navItems = [
   { icon: PanelLeft, label: "Overview", href: "/" },
@@ -28,9 +34,56 @@ type SidebarNavProps = {
 
 export default function SidebarNav({ onContentTypeChange }: SidebarNavProps) {
   const [activeContent, setActiveContent] = useState("articles")
+  const [userProfile, setUserProfile] = useState<any>(null)
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const { toast } = useToast()
   const type = searchParams.get("type") || "articles"
+
+  useEffect(() => {
+    async function loadUserProfile() {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
+
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single()
+
+        setUserProfile(profile)
+      } catch (error) {
+        console.error('Error loading user profile:', error)
+      }
+    }
+
+    loadUserProfile()
+  }, [])
+
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut()
+      if (error) throw error
+
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out.",
+        duration: 3000,
+      })
+
+      router.push('/auth')
+    } catch (error) {
+      console.error('Error logging out:', error)
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+        duration: 3000,
+      })
+    }
+  }
 
   return (
     <aside className="w-64 bg-[#f6f3ef] border-r border-[#e7e3de] flex flex-col justify-between min-h-screen px-6 py-8 rounded-3xl shadow-xl">
@@ -100,14 +153,24 @@ export default function SidebarNav({ onContentTypeChange }: SidebarNavProps) {
         </nav>
       </div>
       {/* User Profile */}
-      <Link href="/profile" legacyBehavior>
-        <a className="flex items-center gap-4 p-4 hover:bg-[#e6f8fd] rounded-2xl mt-4 cursor-pointer transition-all">
-       
-          <div className="flex-1 min-w-0">
-            <div className="text-lg font-bold text-[#05AFF2] truncate">Lena Steiner</div>
+      <div className="flex items-center justify-between p-4 hover:bg-[#e6f8fd] rounded-2xl mt-4 cursor-pointer transition-all">
+        <Link href="/profile" className="flex items-center gap-4 flex-1">
+        
+          giut<div className="flex-1 min-w-0">
+            <div className="text-lg font-bold text-[#05AFF2] truncate">
+              {userProfile?.full_name || 'Loading...'}
+            </div>
           </div>
-        </a>
-      </Link>
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleLogout}
+          className="text-[#05AFF2] hover:text-[#05AFF2]/80 hover:bg-[#e6f8fd]"
+        >
+          <LogOut className="w-5 h-5" />
+        </Button>
+      </div>
     </aside>
   )
 } 

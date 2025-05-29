@@ -7,9 +7,8 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const roboto = Roboto({ subsets: ['latin'], weight: ['400', '500', '700'], variable: '--font-roboto' });
 
 export const metadata: Metadata = {
-  title: 'v0 App',
-  description: 'Created with v0',
-  generator: 'v0.dev',
+  title: 'LMC',
+  description: 'the light weight content creation platform',
 }
 
 export default function RootLayout({

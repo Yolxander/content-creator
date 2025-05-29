@@ -201,7 +201,7 @@ export default function ArticleWizard({ onBack, onSubmit }: ArticleWizardProps) 
   }
 
   return (
-    <div className="p-8">
+    <div className="p-8 overflow-y-auto">
       {/* Back Button */}
       <Button
         onClick={onBack}
