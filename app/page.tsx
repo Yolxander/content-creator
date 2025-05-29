@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import SidebarNav from "@/components/ui/SidebarNav"
-import MainDashboardContent from "@/components/ui/MainDashboardContent"
+import OverviewPage from "./overview/page"
 
 const courses = [
   {
@@ -143,10 +143,9 @@ export default function Page() {
 
   return (
     <div className="flex h-screen bg-gray-50">
-      {/* Sidebar */}
-      <SidebarNav onContentTypeChange={setContentType} />
+   
       {/* Main Content */}
-      <MainDashboardContent contentType={contentType} />
+      <OverviewPage />
     </div>
   )
 }

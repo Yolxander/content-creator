@@ -197,12 +197,12 @@ export default function MainDashboardContent({ contentType = "articles" }) {
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-[#FAFAFB] p-6">
+    <div className="flex-1 flex flex-col bg-[#f6f3ef] p-4 pt-0 h-screen">
       {/* Header & Breadcrumb */}
       <div className="flex flex-col gap-6">
-        <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
+        <div className="flex items-center gap-2 text-base text-[#05AFF2] mb-2">
           <span>Content</span>
-          <ChevronRight className="w-4 h-4 mx-1 text-gray-300" />
+          <ChevronRight className="w-4 h-4 mx-1 text-[#05AFF2]" />
           {isFeeds ? (
             <Rss className="w-5 h-5 text-[#05AFF2]" />
           ) : isModules ? (
@@ -212,17 +212,17 @@ export default function MainDashboardContent({ contentType = "articles" }) {
           ) : (
             <FileText className="w-5 h-5 text-[#05AFF2]" />
           )}
-          <span className="text-gray-900 font-semibold ml-1">{isFeeds ? "Feeds" : isModules ? "Modules" : isAudio ? "Audio" : "Articles"}</span>
+          <span className="text-[#05AFF2] font-bold ml-1">{isFeeds ? "Feeds" : isModules ? "Modules" : isAudio ? "Audio" : "Articles"}</span>
         </div>
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">{isFeeds ? "Feeds" : isModules ? "Modules" : isAudio ? "Audio" : "Articles"}</h1>
+          <h1 className="text-4xl font-extrabold text-[#05AFF2] tracking-tight">{isFeeds ? "Feeds" : isModules ? "Modules" : isAudio ? "Audio" : "Articles"}</h1>
           <div className="flex gap-3">
-            <Button className="bg-[#181A20] text-white rounded-lg px-5 py-2 flex gap-2 shadow-none hover:bg-[#23242a]">
-              <Upload className="w-4 h-4" />
+            <Button className="bg-white text-[#05AFF2] rounded-full px-6 py-3 flex gap-2 shadow-md border border-[#05AFF2] hover:bg-[#e6f8fd] font-semibold">
+              <Upload className="w-5 h-5" />
               Import
             </Button>
-            <Button className="bg-gradient-to-r from-[#0583F2] via-[#0597F2] via-[#05AFF2] to-[#0583F2] text-white rounded-lg px-5 py-2 flex gap-2 shadow-none hover:brightness-110">
-              <Plus className="w-4 h-4 text-white" />
+            <Button className="bg-[#05AFF2] text-white rounded-full px-6 py-3 flex gap-2 shadow-md hover:bg-[#059fd2] font-semibold">
+              <Plus className="w-5 h-5 text-white" />
               Create
             </Button>
           </div>
@@ -230,13 +230,13 @@ export default function MainDashboardContent({ contentType = "articles" }) {
       </div>
 
       {/* Filters and Search */}
-      <div className="flex items-center gap-3 mt-8 mb-4 bg-white rounded-xl px-4 py-3 shadow-sm">
+      <div className="flex items-center gap-3 mt-4 mb-4 bg-white rounded-3xl px-6 py-4 ">
         <div className="relative flex-1 max-w-lg">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-          <Input placeholder="Search..." className="pl-12 h-11 rounded-lg border-gray-200 bg-[#F5F6FA] text-base" />
+          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-[#05AFF2] w-6 h-6" />
+          <Input placeholder="Search..." className="pl-16 h-14 rounded-full border-none bg-white text-base focus:ring-2 focus:ring-[#F2C438]" />
         </div>
         <Select defaultValue="all">
-          <SelectTrigger className="w-36 h-11 rounded-lg border-gray-200 bg-[#F5F6FA] text-base">
+          <SelectTrigger className="w-40 h-14 rounded-full border-none bg-white text-base focus:ring-2 focus:ring-[#F2C438]">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -247,7 +247,7 @@ export default function MainDashboardContent({ contentType = "articles" }) {
           </SelectContent>
         </Select>
         <Select defaultValue="all">
-          <SelectTrigger className="w-36 h-11 rounded-lg border-gray-200 bg-[#F5F6FA] text-base">
+          <SelectTrigger className="w-40 h-14 rounded-full border-none bg-white text-base focus:ring-2 focus:ring-[#F2C438]">
             <SelectValue placeholder="Languages" />
           </SelectTrigger>
           <SelectContent>
@@ -256,41 +256,41 @@ export default function MainDashboardContent({ contentType = "articles" }) {
             <SelectItem value="fr">French</SelectItem>
           </SelectContent>
         </Select>
-        <Button className="bg-[#F5F6FA] text-gray-700 rounded-lg h-11 px-4 flex gap-2 border border-gray-200 shadow-none">
-          <Filter className="w-5 h-5" />
+        <Button className="bg-white text-[#05AFF2] rounded-full h-14 px-6 flex gap-2 border border-[#05AFF2] font-semibold focus:ring-2 focus:ring-[#F2C438]">
+          <Filter className="w-6 h-6" />
           Filters
-          <ChevronDown className="w-4 h-4" />
+          <ChevronDown className="w-5 h-5" />
         </Button>
-        <div className="flex border border-gray-200 rounded-lg overflow-hidden ml-2">
+        <div className="flex border border-[#05AFF2] rounded-full overflow-hidden ml-2 bg-white ">
           <Button
             variant={viewMode === "grid" ? "default" : "ghost"}
             size="icon"
             onClick={() => setViewMode("grid")}
-            className={`rounded-none ${viewMode === "grid" ? "bg-[#F5F6FA]" : "bg-white"}`}
+            className={`rounded-none ${viewMode === "grid" ? "bg-[#e6f8fd] text-[#05AFF2]" : "bg-white text-[#05AFF2]"}`}
           >
-            <Grid3X3 className="w-5 h-5" />
+            <Grid3X3 className="w-6 h-6" />
           </Button>
           <Button
             variant={viewMode === "list" ? "default" : "ghost"}
             size="icon"
             onClick={() => setViewMode("list")}
-            className={`rounded-none ${viewMode === "list" ? "bg-[#F5F6FA]" : "bg-white"}`}
+            className={`rounded-none ${viewMode === "list" ? "bg-[#e6f8fd] text-[#05AFF2]" : "bg-white text-[#05AFF2]"}`}
           >
-            <List className="w-5 h-5" />
+            <List className="w-6 h-6" />
           </Button>
         </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white rounded-3xl shadow-md border border-[#e7e3de] overflow-hidden min-h-[500px]">
         {/* Table Header */}
-        <div className="grid grid-cols-12 gap-0 py-3 px-6 bg-[#F5F6FA] text-base font-semibold text-gray-700 items-center">
+        <div className="grid grid-cols-12 gap-0 py-5 px-8 bg-[#f6f3ef] text-sm text-[#05AFF2] items-center">
           <div className="col-span-1 flex items-center px-4">
-            <Checkbox checked={selectedCourses.length === data.length} onCheckedChange={handleSelectAll} />
+            <Checkbox checked={selectedCourses.length === data.length} onCheckedChange={handleSelectAll} className="accent-[#05AFF2] scale-110" />
           </div>
           <div className="col-span-4 flex items-center gap-2 px-4">
-            {isFeeds ? <Rss className="w-5 h-5 text-[#05AFF2]" /> : isModules ? <Layers className="w-5 h-5 text-[#05AFF2]" /> : isAudio ? <Headphones className="w-5 h-5 text-[#05AFF2]" /> : <FileText className="w-5 h-5 text-[#05AFF2]" />}
-            Title
+            {isFeeds ? <Rss className="w-6 h-6 text-[#05AFF2]" /> : isModules ? <Layers className="w-6 h-6 text-[#05AFF2]" /> : isAudio ? <Headphones className="w-6 h-6 text-[#05AFF2]" /> : <FileText className="w-6 h-6 text-[#05AFF2]" />}
+            <span>Title</span>
           </div>
           <div className="col-span-1 px-4">Status</div>
           <div className="col-span-1 px-4">Language</div>
@@ -308,50 +308,50 @@ export default function MainDashboardContent({ contentType = "articles" }) {
         </div>
         {/* Table Rows */}
         {data.map((item, index) => (
-          <div key={item.id} className="grid grid-cols-12 gap-0 px-2 py-5 items-center border-t border-gray-100 hover:bg-[#FAFAFB] group">
+          <div key={item.id} className="grid grid-cols-12 gap-0 px-2 py-6 items-center border-t border-[#f6f3ef] hover:bg-[#f6f3ef] group text-sm">
             <div className="col-span-1 flex items-center px-4">
               <Checkbox
                 checked={selectedCourses.includes(item.id)}
                 onCheckedChange={(checked) => handleSelectCourse(item.id, checked as boolean)}
-                className="scale-110"
+                className="accent-[#05AFF2] scale-110"
               />
             </div>
             <div className="col-span-4 flex items-center gap-3 min-w-0 px-4">
               <img
                 src={item.image || "/placeholder.svg"}
                 alt={item.title}
-                className="w-12 h-12 rounded-lg object-cover border border-gray-200"
+                className="w-14 h-14 rounded-2xl object-cover border border-[#e7e3de] shadow-sm"
               />
-              <span className="font-medium truncate text-base text-gray-900">{item.title}</span>
+              <span className="truncate text-base text-[#181A20]">{item.title}</span>
             </div>
             <div className="col-span-1 px-4">
-              <Badge variant="secondary" className={getStatusColor(item.status) + " px-3 py-1 rounded-full text-sm font-semibold"}>
+              <Badge variant="secondary" className={getStatusColor(item.status) + " px-4 py-2 rounded-full text-xs"}>
                 {item.status}
               </Badge>
             </div>
             <div className="col-span-1 flex items-center gap-1 px-4">
               <span className="text-base">🇫🇷</span>
               <span className="text-base">🇬🇧</span>
-              <span className="ml-1 text-xs bg-gray-100 text-gray-700 rounded px-2 py-0.5 font-medium">+3</span>
+              <span className="ml-1 text-[10px] bg-[#f6f3ef] text-[#05AFF2] rounded-full px-2 py-0.5">+3</span>
             </div>
-            <div className="col-span-2 text-right text-base text-gray-500 px-4 whitespace-nowrap">{item.lastEdit}</div>
+            <div className="col-span-2 text-right text-xs text-[#b6b0a6] px-4 whitespace-nowrap">{item.lastEdit}</div>
             {isFeeds ? (
-              <div className="col-span-2 text-right text-base text-gray-700 px-4 whitespace-nowrap">{'source' in item ? item.source : ''}</div>
+              <div className="col-span-2 text-right text-xs text-[#181A20] px-4 whitespace-nowrap">{'source' in item ? item.source : ''}</div>
             ) : isModules ? (
-              <div className="col-span-2 text-right text-base text-gray-700 px-4 whitespace-nowrap">{'lessons' in item ? item.lessons : ''}</div>
+              <div className="col-span-2 text-right text-xs text-[#181A20] px-4 whitespace-nowrap">{'lessons' in item ? item.lessons : ''}</div>
             ) : isAudio ? (
-              <div className="col-span-2 text-right text-base text-gray-700 px-4 whitespace-nowrap">{'duration' in item ? item.duration : ''}</div>
+              <div className="col-span-2 text-right text-xs text-[#181A20] px-4 whitespace-nowrap">{'duration' in item ? item.duration : ''}</div>
             ) : (
-              <div className="col-span-2 text-right text-base text-gray-700 px-4 whitespace-nowrap">{'version' in item ? (<span className="font-semibold">Version</span>) : ''} {'version' in item ? item.version.replace('Version ', '') : ''}</div>
+              <div className="col-span-2 text-right text-xs text-[#181A20] px-4 whitespace-nowrap">{'version' in item ? (<span>Version</span>) : ''} {'version' in item ? item.version.replace('Version ', '') : ''}</div>
             )}
             <div className="col-span-1 flex items-center justify-end gap-2 px-4">
-              <Button variant="ghost" size="icon" className="hover:bg-gray-100">
-                <Edit className="w-4 h-4 text-gray-400" />
+              <Button variant="ghost" size="icon" className="hover:bg-[#e6f8fd] rounded-full">
+                <Edit className="w-5 h-5 text-[#05AFF2]" />
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="hover:bg-gray-100">
-                    <MoreHorizontal className="w-4 h-4 text-gray-400" />
+                  <Button variant="ghost" size="icon" className="hover:bg-[#e6f8fd] rounded-full">
+                    <MoreHorizontal className="w-5 h-5 text-[#05AFF2]" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -369,19 +369,19 @@ export default function MainDashboardContent({ contentType = "articles" }) {
 
       {/* Selection Bar */}
       {selectedCourses.length > 0 && (
-        <div className="fixed left-1/2 bottom-8 -translate-x-1/2 z-50 bg-[#181A20] text-white px-8 py-3 rounded-2xl shadow-xl flex items-center gap-6 min-w-[340px] justify-center">
-          <span className="text-base font-semibold">{selectedCourses.length} selected</span>
+        <div className="fixed left-1/2 bottom-8 -translate-x-1/2 z-50 bg-[#05AFF2] text-white px-10 py-4 rounded-full shadow-2xl flex items-center gap-8 min-w-[360px] justify-center">
+          <span className="text-lg font-semibold">{selectedCourses.length} selected</span>
           <Button variant="ghost" size="icon" onClick={() => setSelectedCourses([])} className="text-white">
             ✕
           </Button>
           <Button variant="ghost" size="icon" className="text-white">
-            <Edit className="w-5 h-5" />
+            <Edit className="w-6 h-6" />
           </Button>
           <Button variant="ghost" size="icon" className="text-white">
-            <Trash2 className="w-5 h-5" />
+            <Trash2 className="w-6 h-6" />
           </Button>
           <Button variant="ghost" size="icon" className="text-white">
-            <MoreHorizontal className="w-5 h-5" />
+            <MoreHorizontal className="w-6 h-6" />
           </Button>
         </div>
       )}
