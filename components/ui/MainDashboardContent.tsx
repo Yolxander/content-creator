@@ -221,7 +221,7 @@ export default function MainDashboardContent({ contentType = "articles" }) {
               <Upload className="w-4 h-4" />
               Import
             </Button>
-            <Button className="bg-gradient-to-r from-[#0583F2] via-[#0597F2] via-[#05AFF2] to-[#5CC8F2] text-white rounded-lg px-5 py-2 flex gap-2 shadow-none hover:brightness-110">
+            <Button className="bg-gradient-to-r from-[#0583F2] via-[#0597F2] via-[#05AFF2] to-[#0583F2] text-white rounded-lg px-5 py-2 flex gap-2 shadow-none hover:brightness-110">
               <Plus className="w-4 h-4 text-white" />
               Create
             </Button>

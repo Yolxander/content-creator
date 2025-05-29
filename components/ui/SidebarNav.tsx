@@ -55,7 +55,7 @@ export default function SidebarNav({ onContentTypeChange }: SidebarNavProps) {
               {contentItems.map(({ icon: Icon, label }) => (
                 <div
                   key={label}
-                  className={`flex items-center gap-2 px-2 py-1 rounded-lg cursor-pointer font-medium text-base transition-all ${activeContent === label.toLowerCase() ? "bg-gradient-to-r from-[#0583F2] via-[#0597F2] via-[#05AFF2] to-[#5CC8F2] text-white" : "text-gray-700 hover:bg-gray-50"}`}
+                  className={`flex items-center gap-2 px-2 py-1 rounded-lg cursor-pointer font-medium text-base transition-all ${activeContent === label.toLowerCase() ? "bg-gradient-to-r from-[#0583F2] via-[#0597F2] via-[#05AFF2] to-[#0583F2] text-white" : "text-gray-700 hover:bg-gray-50"}`}
                   onClick={() => {
                     setActiveContent(label.toLowerCase())
                     if (onContentTypeChange) onContentTypeChange(label.toLowerCase())
