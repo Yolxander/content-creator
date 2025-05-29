@@ -100,7 +100,7 @@ export default function SidebarNav({ onContentTypeChange }: SidebarNavProps) {
         </nav>
       </div>
       {/* User Profile */}
-      <div className="flex items-center gap-4 p-4 hover:bg-[#e6f8fd] rounded-2xl mt-10 cursor-pointer transition-all">
+      <div className="flex items-center gap-4 p-4 hover:bg-[#e6f8fd] rounded-2xl mt-4 cursor-pointer transition-all">
         <Avatar className="w-12 h-12 rounded-full shadow-md">
           <AvatarImage src="/placeholder.svg?height=32&width=32" />
           <AvatarFallback>LS</AvatarFallback>
