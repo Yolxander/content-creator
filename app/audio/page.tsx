@@ -42,54 +42,59 @@ import {
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
 
-const articles = [
+const audioFiles = [
   {
     id: 1,
-    title: "How to Build a Successful Content Strategy",
+    title: "Marketing Podcast Episode 1",
     author: "Adam Rogers",
     category: "MARKETING",
     status: "PUBLISHED",
-    views: 1234,
+    duration: "45:30",
+    languages: 3,
     lastModified: "Sep 12, 2024",
     selected: false,
   },
   {
     id: 2,
-    title: "The Future of Digital Marketing",
+    title: "Business Strategy Discussion",
     author: "Mike Fitzgerald",
     category: "STRATEGY",
     status: "IN_REVIEW",
-    views: 856,
+    duration: "32:15",
+    languages: 2,
     lastModified: "Sep 11, 2024",
     selected: true,
   },
   {
     id: 3,
-    title: "10 Tips for Better Content Writing",
+    title: "Tech News Roundup",
     author: "Sarah Johnson",
     category: "TECH",
     status: "DRAFT",
-    views: 0,
+    duration: "28:45",
+    languages: 1,
     lastModified: "Sep 10, 2024",
     selected: false,
   },
   {
     id: 4,
-    title: "Content Marketing Trends 2024",
+    title: "Industry Insights",
     author: "Adam Rogers",
     category: "INDUSTRY",
     status: "PUBLISHED",
-    views: 2345,
+    duration: "52:10",
+    languages: 5,
     lastModified: "Sep 9, 2024",
     selected: true,
   },
   {
     id: 5,
-    title: "The Art of Storytelling in Marketing",
+    title: "Expert Interview Series",
     author: "Emily Chen",
     category: "INTERVIEW",
     status: "PENDING_APPROVAL",
-    views: 567,
+    duration: "38:20",
+    languages: 2,
     lastModified: "Sep 8, 2024",
     selected: true,
   },
@@ -127,17 +132,17 @@ const getCategoryColor = (category: string) => {
   }
 }
 
-export default function HomePage() {
-  const [selectedArticles, setSelectedArticles] = useState(articles.filter((article) => article.selected))
+export default function AudioPage() {
+  const [selectedAudio, setSelectedAudio] = useState(audioFiles.filter((audio) => audio.selected))
   const [groupEnabled, setGroupEnabled] = useState(false)
 
-  const toggleArticleSelection = (articleId: number) => {
-    const article = articles.find((a) => a.id === articleId)
-    if (article) {
-      if (selectedArticles.find((a) => a.id === articleId)) {
-        setSelectedArticles(selectedArticles.filter((a) => a.id !== articleId))
+  const toggleAudioSelection = (audioId: number) => {
+    const audio = audioFiles.find((a) => a.id === audioId)
+    if (audio) {
+      if (selectedAudio.find((a) => a.id === audioId)) {
+        setSelectedAudio(selectedAudio.filter((a) => a.id !== audioId))
       } else {
-        setSelectedArticles([...selectedArticles, article])
+        setSelectedAudio([...selectedAudio, audio])
       }
     }
   }
@@ -151,12 +156,12 @@ export default function HomePage() {
         {/* Header */}
         <div className="bg-white border-b border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Audio</h1>
             <div className="flex items-center gap-2">
-              <Link href="/articles/new">
+              <Link href="/audio/new">
                 <Button>
                   <Plus className="w-4 h-4 mr-2" />
-                  New article
+                  New audio
                 </Button>
               </Link>
               <DropdownMenu>
@@ -254,7 +259,7 @@ export default function HomePage() {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input placeholder="Search articles..." className="pl-9 w-64" />
+                <Input placeholder="Search audio files..." className="pl-9 w-64" />
               </div>
               <Button variant="ghost" size="icon">
                 <MoreHorizontal className="w-4 h-4" />
@@ -270,14 +275,15 @@ export default function HomePage() {
               <tr>
                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    ARTICLE
+                    <FileAudio className="w-4 h-4" />
+                    AUDIO
                   </div>
                 </th>
                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">AUTHOR</th>
                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">CATEGORY</th>
                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">VIEWS</th>
+                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">DURATION</th>
+                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">LANGUAGES</th>
                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <div className="flex items-center gap-1">
                     LAST MODIFIED
@@ -287,17 +293,17 @@ export default function HomePage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {articles.map((article) => (
-                <tr key={article.id} className="hover:bg-gray-50">
+              {audioFiles.map((audio) => (
+                <tr key={audio.id} className="hover:bg-gray-50">
                   <td className="p-4">
                     <div className="flex items-center gap-3">
                       <Checkbox
-                        checked={selectedArticles.some((a) => a.id === article.id)}
-                        onCheckedChange={() => toggleArticleSelection(article.id)}
+                        checked={selectedAudio.some((a) => a.id === audio.id)}
+                        onCheckedChange={() => toggleAudioSelection(audio.id)}
                       />
                       <div>
-                        <div className="font-medium text-gray-900">{article.title}</div>
-                        <div className="text-sm text-gray-500">ID: {article.id}</div>
+                        <div className="font-medium text-gray-900">{audio.title}</div>
+                        <div className="text-sm text-gray-500">ID: {audio.id}</div>
                       </div>
                     </div>
                   </td>
@@ -305,33 +311,39 @@ export default function HomePage() {
                     <div className="flex items-center gap-2">
                       <Avatar className="w-6 h-6">
                         <AvatarFallback className="text-xs">
-                          {article.author
+                          {audio.author
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm text-gray-900">{article.author}</span>
+                      <span className="text-sm text-gray-900">{audio.author}</span>
                     </div>
                   </td>
                   <td className="p-4">
-                    <Badge variant="secondary" className={getCategoryColor(article.category)}>
-                      {article.category}
+                    <Badge variant="secondary" className={getCategoryColor(audio.category)}>
+                      {audio.category}
                     </Badge>
                   </td>
                   <td className="p-4">
-                    <Badge variant="secondary" className={getStatusColor(article.status)}>
-                      {article.status.replace("_", " ")}
+                    <Badge variant="secondary" className={getStatusColor(audio.status)}>
+                      {audio.status.replace("_", " ")}
                     </Badge>
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-1">
-                      <Eye className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-900">{article.views}</span>
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-900">{audio.duration}</span>
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="text-sm text-gray-500">{article.lastModified}</span>
+                    <div className="flex items-center gap-1">
+                      <Languages className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-900">{audio.languages}</span>
+                    </div>
+                  </td>
+                  <td className="p-4">
+                    <span className="text-sm text-gray-500">{audio.lastModified}</span>
                   </td>
                 </tr>
               ))}
@@ -340,9 +352,9 @@ export default function HomePage() {
         </div>
 
         {/* Bottom action bar */}
-        {selectedArticles.length > 0 && (
+        {selectedAudio.length > 0 && (
           <div className="bg-gray-900 text-white p-4 flex items-center justify-between">
-            <span className="text-sm">{selectedArticles.length} selected articles</span>
+            <span className="text-sm">{selectedAudio.length} selected audio files</span>
             <div className="flex items-center gap-2">
               <Button variant="secondary" size="sm">
                 Publish
@@ -364,4 +376,4 @@ export default function HomePage() {
       </div>
     </div>
   )
-}
+} 
