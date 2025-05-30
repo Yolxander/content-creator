@@ -159,9 +159,9 @@ export default function FeedsPage() {
             <h1 className="text-2xl font-semibold text-gray-900">Feeds</h1>
             <div className="flex items-center gap-2">
               <Link href="/feeds/new">
-                <Button>
+                <Button className={"bg-[#05AFF2]"}>
                   <Plus className="w-4 h-4 mr-2" />
-                  New feed
+                  New Feed
                 </Button>
               </Link>
               <DropdownMenu>
