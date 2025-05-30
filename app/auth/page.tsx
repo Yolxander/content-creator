@@ -1,193 +1,60 @@
-'use client';
-
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Image from 'next/image';
-import { useAuth } from '@/lib/auth-context';
+"use client";
+import Image from "next/image";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import Link from "next/link";
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
-  const { signIn, signUp } = useAuth();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-    if (!isLogin && password !== confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    setLoading(true);
-    try {
-      if (isLogin) {
-        await signIn(email, password);
-      } else {
-        await signUp(email, password);
-      }
-      router.push('/');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleAuthMode = () => {
-    setIsLogin(!isLogin);
-    setError(null);
-    setPassword('');
-    setConfirmPassword('');
-  };
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f6f3ef]">
-      <div className="w-full h-[700px] mr-3 bg-[#f6f3ef] rounded-3xl flex overflow-hidden">
-        {/* Left Side - Auth Form */}
-        <div className="w-full md:w-1/2 flex flex-col justify-between px-16 py-12">
-          {/* Logo */}
-          <div className="flex items-center mb-8">
-            <Image src="/logo/lmc-logo.png" alt="Sellora Logo" className='w-10 h-10 rounded-md' width={40} height={40} />
-            <span className="ml-3 text-2xl font-bold text-[#05AFF2]">
-              Light Merjj <span style={{ color: '#F2C438' }}>CMS</span>
+    <div className="min-h-screen flex bg-[#eaf8fd]">
+      {/* Left Side */}
+      <div className="w-1/2 flex flex-col justify-center items-center bg-[#05AFF2] p-12">
+        <div className="mb-8">
+          <Image src="/auth-page-laptop.png" alt="Exam Illustration" width={350} height={350} />
+        </div>
+        <h1 className="text-3xl font-bold text-center mb-4 text-[#F2C438]">Manage Your Merjj Content</h1>
+        <p className="text-center text-black max-w-md text-[20px]">
+          Seamlessly create, organize, and publish content that will be displayed on the Merjj Platform. Empower your team to manage articles, media, and more—all in one place, ready for your Merjj audience.
+        </p>
+        {/* Carousel dots */}
+        <div className="flex gap-2 mt-6">
+          <span className="w-3 h-3 rounded-full bg-[#05AFF2]" />
+          <span className="w-3 h-3 rounded-full bg-[#bdeafd]" />
+          <span className="w-3 h-3 rounded-full bg-[#bdeafd]" />
+        </div>
+      </div>
+      {/* Right Side */}
+      <div className="w-1/2 flex flex-col justify-center items-center bg-gray-50 p-0">
+        <div className="w-full max-w-md flex flex-col justify-center items-center min-h-screen">
+          <div className="flex flex-col items-center mb-8 mt-16">
+            <span className="text-3xl font-semibold text-[#0a3a4a] flex items-center gap-2">
+              <span className="">Merjj</span>
+              <span className="text-[#05AFF2]">CCP</span>
             </span>
           </div>
-
-          {/* Form */}
-          <div className="flex-1 flex flex-col justify-center items-start">
-            <div className="w-full max-w-md">
-              <h2 className="text-4xl font-extrabold text-gray-900 mb-3">{isLogin ? 'Login' : 'Register'}</h2>
-    
-
-              <div className="flex items-center my-6">
-                <div className="flex-grow border-t border-[#e7e3de]"></div>
-                <span className="mx-3 text-[#05AFF2] text-base">or</span>
-                <div className="flex-grow border-t border-[#e7e3de]"></div>
-              </div>
-
-              {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-600 rounded-md text-sm">
-                  {error}
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="email" className="block text-base text-[#05AFF2] mb-1">Email</label>
-                  <input
-                    id="email"
-                    name="email"
-                    type="email"
-                    autoComplete="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="your@email.com"
-                    className="w-full px-6 py-4 border-none rounded-full focus:outline-none focus:ring-2 focus:ring-[#e7e3de] text-gray-900 bg-white text-base shadow-md placeholder:text-[#b6b0a6]"
-                  />
-                </div>
-                <div className="relative">
-                  <label htmlFor="password" className="block text-base text-[#05AFF2] mb-1">Password</label>
-                  <input
-                    id="password"
-                    name="password"
-                    type={showPassword ? 'text' : 'password'}
-                    autoComplete={isLogin ? 'current-password' : 'new-password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Type your password"
-                    className="w-full px-6 py-4 border-none rounded-full focus:outline-none focus:ring-2 focus:ring-[#e7e3de] text-gray-900 bg-white pr-12 text-base shadow-md placeholder:text-[#b6b0a6]"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-4 top-11 text-[#05AFF2] hover:text-gray-700 focus:outline-none"
-                    tabIndex={-1}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.657.336-3.236.938-4.675M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.062-4.675A9.956 9.956 0 0122 9c0 5.523-4.477 10-10 10a9.956 9.956 0 01-4.675-.938" /></svg>
-                    ) : (
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm2.21-2.21A8.962 8.962 0 0121 12c0 4.418-3.582 8-8 8s-8-3.582-8-8c0-1.657.336-3.236.938-4.675" /></svg>
-                    )}
-                  </button>
-                </div>
-                {!isLogin && (
-                  <div className="relative">
-                    <label htmlFor="confirmPassword" className="block text-base text-[#05AFF2] mb-1">Confirm Password</label>
-                    <input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      autoComplete="new-password"
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm your password"
-                      className="w-full px-6 py-4 border-none rounded-full focus:outline-none focus:ring-2 focus:ring-[#e7e3de] text-gray-900 bg-white pr-12 text-base shadow-md placeholder:text-[#b6b0a6]"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword((v) => !v)}
-                      className="absolute right-4 top-11 text-[#05AFF2] hover:text-gray-700 focus:outline-none"
-                      tabIndex={-1}
-                      aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showConfirmPassword ? (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5.523 0-10-4.477-10-10 0-1.657.336-3.236.938-4.675M15 12a3 3 0 11-6 0 3 3 0 016 0zm6.062-4.675A9.956 9.956 0 0122 9c0 5.523-4.477 10-10 10a9.956 9.956 0 01-4.675-.938" /></svg>
-                      ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0zm2.21-2.21A8.962 8.962 0 0121 12c0 4.418-3.582 8-8 8s-8-3.582-8-8c0-1.657.336-3.236.938-4.675" /></svg>
-                      )}
-                    </button>
-                  </div>
-                )}
-                <div className="flex items-center justify-between mt-2">
-                  <label className="flex items-center gap-2 text-[#05AFF2] text-base">
-                    <input id="remember-me" name="remember-me" type="checkbox" className="h-5 w-5 accent-[#05AFF2] rounded border-none focus:ring-0" style={{ accentColor: '#05AFF2' }} />
-                    <span className="text-[#05AFF2] font-semibold">Remember me</span>
-                  </label>
-                  <a href="#" className="text-base text-[#05AFF2] hover:underline font-medium">Forgot password</a>
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full py-4 rounded-full bg-[#05AFF2] text-white font-semibold text-lg shadow-lg hover:bg-[#059fd2] transition disabled:opacity-50 disabled:cursor-not-allowed mt-2"
-                >
-                  {loading ? 'Processing...' : isLogin ? 'Login' : 'Register'}
-                </button>
-              </form>
-              <div className="mt-8 text-center text-base text-[#05AFF2]">
-                {isLogin ? "Don't have an account? " : "Already have an account? "}
-                <button
-                  onClick={toggleAuthMode}
-                  className="text-black font-semibold hover:underline ml-1"
-                >
-                  {isLogin ? 'Register Now' : 'Log In'}
-                </button>
-              </div>
+          <form className="flex flex-col gap-4 w-full rounded-lg p-8">
+            <label className="text-base font-medium text-gray-700">Username or email</label>
+            <Input type="text" placeholder="johnsmith007" className="mb-2" />
+            <label className="text-base font-medium text-gray-700">Password</label>
+            <Input type="password" placeholder="**********" className="mb-2" />
+            <div className="flex justify-end mb-4">
+              <Link href="#" className="text-[#05AFF2] text-base hover:underline">Forgot password?</Link>
             </div>
+            <Button type="submit" className="w-full bg-[#05AFF2] hover:bg-[#0486b1] text-white">Sign in</Button>
+          </form>
+          <div className="flex items-center w-full my-6">
+            <div className="flex-grow h-px bg-gray-200" />
+            <span className="mx-4 text-gray-400">or</span>
+            <div className="flex-grow h-px bg-gray-200" />
           </div>
-          {/* Footer */}
-          <div className="mt-10 flex justify-between text-xs text-[#b6b0a6]">
-            <span>Copyright © 2025 Light Merjj CMS.</span>
-            <a href="#" className="hover:underline">Privacy Policy</a>
-          </div>
-        </div>
-        {/* Right Side - Marketing */}
-        <div className="hidden md:flex w-1/2 bg-[#05AFF2] flex-col items-center justify-center relative p-10 rounded-l-3xl">
-          <div className="text-white text-center text-3xl font-extrabold max-w-xl mb-6 text-left leading-snug drop-shadow-xl">
-            All in one Content Management <span style={{ color: '#F2C438' }}>Platform</span><br />
-            <span className="text-2xl font-normal block mt-2 opacity-80">Quickly. Globally.</span>
-          </div>
-          <div className="w-full flex justify-center">
-            <Image src="/dashbord-preview.png" alt="Dashboard Illustration" width={500} height={400} className="rounded-2xl shadow-2xl  p-2" />
+          <Button variant="outline" className="w-full flex items-center justify-center gap-2">
+            <Image src="https://www.svgrepo.com/show/475656/google-color.svg" alt="Google" width={20} height={20} />
+            Sign in with Google
+          </Button>
+          <div className="text-center mt-6 text-base w-full">
+            Are you new?{' '}
+            <Link href="#" className="text-[#05AFF2] hover:underline">Create an Account</Link>
           </div>
         </div>
       </div>
