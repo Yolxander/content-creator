@@ -37,6 +37,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
+import { BottomActionBar } from "@/components/BottomActionBar"
 
 const articles = [
   {
@@ -152,10 +153,10 @@ export default function ArticlesPage() {
         {/* Header */}
         <div className="bg-white border-b border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-semibold text-gray-900">Articles</h1>
+            <h1 className="text-2xl font-semibold text-[">Articles</h1>
             <div className="flex items-center gap-2">
               <Link href="/articles/new">
-                <Button>
+                <Button className={"bg-[#05AFF2]"}>
                   <Plus className="w-4 h-4 mr-2" />
                   New article
                 </Button>
@@ -347,28 +348,7 @@ export default function ArticlesPage() {
           </table>
         </div>
 
-        {/* Bottom action bar */}
-        {selectedArticles.length > 0 && (
-          <div className="bg-gray-900 text-white p-4 flex items-center justify-between">
-            <span className="text-sm">{selectedArticles.length} selected articles</span>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm">
-                Publish
-              </Button>
-              <Button variant="secondary" size="sm">
-                Translate
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        )}
+        <BottomActionBar selectedCount={selectedArticles.length} itemType="articles" />
       </div>
     </div>
   )

@@ -16,6 +16,7 @@ import {
   Shield,
   FolderOpen,
 } from "lucide-react"
+import { OrganizationSwitcher } from "@/components/OrganizationSwitcher"
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -44,11 +45,12 @@ export function Sidebar() {
       </button>
 
       {/* Logo */}
-      <div className="p-4 border-b border-gray-200">
-        <Link href="/" className="flex items-center gap-2">
-          <FolderOpen className="w-6 h-6 text-blue-600" />
-          {!isCollapsed && <span className="font-semibold text-lg">Content Creator</span>}
-        </Link>
+      <div className="border-b border-gray-200 pt-4">
+        {!isCollapsed && (
+          <div className="px-4 pb-4">
+            <OrganizationSwitcher />
+          </div>
+        )}
       </div>
 
       {/* Navigation */}

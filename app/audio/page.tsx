@@ -41,6 +41,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
+import { BottomActionBar } from "@/components/BottomActionBar"
 
 const audioFiles = [
   {
@@ -351,28 +352,7 @@ export default function AudioPage() {
           </table>
         </div>
 
-        {/* Bottom action bar */}
-        {selectedAudio.length > 0 && (
-          <div className="bg-gray-900 text-white p-4 flex items-center justify-between">
-            <span className="text-sm">{selectedAudio.length} selected audio files</span>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm">
-                Publish
-              </Button>
-              <Button variant="secondary" size="sm">
-                Translate
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        )}
+        <BottomActionBar selectedCount={selectedAudio.length} itemType="audio" />
       </div>
     </div>
   )

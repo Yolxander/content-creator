@@ -38,9 +38,12 @@ import {
   Clock,
   Languages,
   FileAudio,
+  MessageSquare,
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
+import { BottomActionBar } from "@/components/BottomActionBar"
+import { AddContentModal } from "@/components/AddContentModal"
 
 const articles = [
   {
@@ -52,26 +55,32 @@ const articles = [
     views: 1234,
     lastModified: "Sep 12, 2024",
     selected: false,
+    type: "article",
+    wordCount: 2500,
   },
   {
     id: 2,
-    title: "The Future of Digital Marketing",
+    title: "Marketing Podcast Episode 1",
     author: "Mike Fitzgerald",
     category: "STRATEGY",
     status: "IN_REVIEW",
     views: 856,
     lastModified: "Sep 11, 2024",
     selected: true,
+    type: "audio",
+    duration: "45:30",
   },
   {
     id: 3,
-    title: "10 Tips for Better Content Writing",
+    title: "Content Review Request",
     author: "Sarah Johnson",
     category: "TECH",
     status: "DRAFT",
     views: 0,
     lastModified: "Sep 10, 2024",
     selected: false,
+    type: "submission",
+    priority: "High",
   },
   {
     id: 4,
@@ -82,16 +91,20 @@ const articles = [
     views: 2345,
     lastModified: "Sep 9, 2024",
     selected: true,
+    type: "article",
+    wordCount: 1800,
   },
   {
     id: 5,
-    title: "The Art of Storytelling in Marketing",
+    title: "Expert Interview Series",
     author: "Emily Chen",
     category: "INTERVIEW",
     status: "PENDING_APPROVAL",
     views: 567,
     lastModified: "Sep 8, 2024",
     selected: true,
+    type: "audio",
+    duration: "32:15",
   },
 ]
 
@@ -130,6 +143,7 @@ const getCategoryColor = (category: string) => {
 export default function HomePage() {
   const [selectedArticles, setSelectedArticles] = useState(articles.filter((article) => article.selected))
   const [groupEnabled, setGroupEnabled] = useState(false)
+  const [isAddContentModalOpen, setIsAddContentModalOpen] = useState(false)
 
   const toggleArticleSelection = (articleId: number) => {
     const article = articles.find((a) => a.id === articleId)
@@ -153,12 +167,10 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
             <div className="flex items-center gap-2">
-              <Link href="/articles/new">
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  New article
-                </Button>
-              </Link>
+              <Button className="bg-[#05AFF2]" onClick={() => setIsAddContentModalOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Content
+              </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon">
@@ -271,13 +283,13 @@ export default function HomePage() {
                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4" />
-                    ARTICLE
+                    CONTENT
                   </div>
                 </th>
                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">AUTHOR</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">CATEGORY</th>
+                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">TYPE</th>
                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">VIEWS</th>
+                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">METRICS</th>
                 <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   <div className="flex items-center gap-1">
                     LAST MODIFIED
@@ -315,9 +327,26 @@ export default function HomePage() {
                     </div>
                   </td>
                   <td className="p-4">
-                    <Badge variant="secondary" className={getCategoryColor(article.category)}>
-                      {article.category}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      {article.type === "article" && (
+                        <>
+                          <FileText className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm text-gray-900">Article</span>
+                        </>
+                      )}
+                      {article.type === "audio" && (
+                        <>
+                          <FileAudio className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm text-gray-900">Audio</span>
+                        </>
+                      )}
+                      {article.type === "submission" && (
+                        <>
+                          <MessageSquare className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm text-gray-900">Submission</span>
+                        </>
+                      )}
+                    </div>
                   </td>
                   <td className="p-4">
                     <Badge variant="secondary" className={getStatusColor(article.status)}>
@@ -326,8 +355,15 @@ export default function HomePage() {
                   </td>
                   <td className="p-4">
                     <div className="flex items-center gap-1">
-                      <Eye className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-900">{article.views}</span>
+                      {article.type === "article" && (
+                        <span className="text-sm text-gray-900">{article.wordCount} words</span>
+                      )}
+                      {article.type === "audio" && (
+                        <span className="text-sm text-gray-900">{article.duration}</span>
+                      )}
+                      {article.type === "submission" && (
+                        <span className="text-sm text-gray-900">Priority: {article.priority}</span>
+                      )}
                     </div>
                   </td>
                   <td className="p-4">
@@ -339,29 +375,13 @@ export default function HomePage() {
           </table>
         </div>
 
-        {/* Bottom action bar */}
-        {selectedArticles.length > 0 && (
-          <div className="bg-gray-900 text-white p-4 flex items-center justify-between">
-            <span className="text-sm">{selectedArticles.length} selected articles</span>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm">
-                Publish
-              </Button>
-              <Button variant="secondary" size="sm">
-                Translate
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        )}
+        <BottomActionBar selectedCount={selectedArticles.length} itemType="articles" />
       </div>
+
+      <AddContentModal 
+        isOpen={isAddContentModalOpen} 
+        onClose={() => setIsAddContentModalOpen(false)} 
+      />
     </div>
   )
 }

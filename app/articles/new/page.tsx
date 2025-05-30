@@ -158,7 +158,7 @@ export default function NewArticlePage() {
                 <Share className="w-4 h-4 mr-2" />
                 Share
               </Button>
-              <Button>
+              <Button className={"bg-[#05AFF2]"}>
                 <Save className="w-4 h-4 mr-2" />
                 Save Article
               </Button>
@@ -169,7 +169,7 @@ export default function NewArticlePage() {
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-600">Article completion</span>
-              <span className="text-sm font-medium text-gray-900">{completionPercentage}%</span>
+              <span className="text-sm font-medium text-[#05AFF2]">{completionPercentage}%</span>
             </div>
             <Progress value={completionPercentage} className="h-2" />
           </div>

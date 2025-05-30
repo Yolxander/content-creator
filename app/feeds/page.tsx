@@ -48,6 +48,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
+import { BottomActionBar } from "@/components/BottomActionBar"
 
 const feeds = [
   {
@@ -336,30 +337,7 @@ export default function FeedsPage() {
           </table>
         </div>
 
-        {/* Bottom action bar */}
-        {selectedFeeds.length > 0 && (
-          <div className="bg-gray-900 text-white p-4 flex items-center justify-between">
-            <span className="text-sm">{selectedFeeds.length} selected feeds</span>
-            <div className="flex items-center gap-2">
-              <Button variant="secondary" size="sm">
-                <Pin className="w-4 h-4 mr-2" />
-                Pin
-              </Button>
-              <Button variant="secondary" size="sm">
-                <ArrowUpDown className="w-4 h-4 mr-2" />
-                Reorder
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Download className="w-4 h-4 mr-2" />
-                Export
-              </Button>
-              <Button variant="secondary" size="sm">
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </Button>
-            </div>
-          </div>
-        )}
+        <BottomActionBar selectedCount={selectedFeeds.length} itemType="feeds" />
       </div>
     </div>
   )
