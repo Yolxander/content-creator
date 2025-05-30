@@ -53,9 +53,9 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        <Link href="/dashboard">
+        <Link href="/">
           <Button
-            variant={isActive("/dashboard") ? "secondary" : "ghost"}
+            variant={isActive("/") ? "secondary" : "ghost"}
             className="w-full justify-start"
           >
             <LayoutDashboard className="w-4 h-4 mr-2" />
