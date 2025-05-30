@@ -1,93 +1,140 @@
+"use client"
+
+import { useState } from "react"
 import Link from "next/link"
-import { Home, FileText, HelpCircle, Settings, ArrowUpRight, ChevronDown, Headphones, Rss, Briefcase } from "lucide-react"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import {
+  LayoutDashboard,
+  FileText,
+  FileAudio,
+  Rss,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+  Shield,
+  FolderOpen,
+} from "lucide-react"
 
 export function Sidebar() {
+  const [isCollapsed, setIsCollapsed] = useState(false)
+  const pathname = usePathname()
+
+  const isActive = (path: string) => {
+    return pathname === path
+  }
+
   return (
-    <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
+    <div
+      className={`relative flex flex-col h-screen bg-white border-r border-gray-200 transition-all duration-300 ${
+        isCollapsed ? "w-16" : "w-64"
+      }`}
+    >
+      {/* Collapse button */}
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -right-3 top-6 bg-white border border-gray-200 rounded-full p-1 hover:bg-gray-50"
+      >
+        {isCollapsed ? (
+          <ChevronRight className="w-4 h-4 text-gray-500" />
+        ) : (
+          <ChevronLeft className="w-4 h-4 text-gray-500" />
+        )}
+      </button>
+
       {/* Logo */}
       <div className="p-4 border-b border-gray-200">
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-orange-500 rounded flex items-center justify-center">
-            <div className="w-3 h-3 bg-white rounded-sm"></div>
-          </div>
-          <span className="font-semibold text-gray-900">Meetalo</span>
-        </div>
+        <Link href="/" className="flex items-center gap-2">
+          <FolderOpen className="w-6 h-6 text-blue-600" />
+          {!isCollapsed && <span className="font-semibold text-lg">Content Creator</span>}
+        </Link>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 p-4">
-        <div className="space-y-1">
-          <Link href="/">
-            <Button variant="ghost" className="w-full justify-start">
-              <Home className="w-4 h-4 mr-2" />
-              Dashboard
-            </Button>
-          </Link>
-          <Link href="/my-work">
-            <Button variant="ghost" className="w-full justify-start">
-              <Briefcase className="w-4 h-4 mr-2" />
-              My work
-            </Button>
-          </Link>
-          <Link href="/articles">
-            <Button variant="ghost" className="w-full justify-start">
-              <FileText className="w-4 h-4 mr-2" />
-              Articles
-            </Button>
-          </Link>
-          <Link href="/audio">
-            <Button variant="ghost" className="w-full justify-start">
-              <Headphones className="w-4 h-4 mr-2" />
-              Audio
-            </Button>
-          </Link>
-          <Link href="/feeds">
-            <Button variant="ghost" className="w-full justify-start">
-              <Rss className="w-4 h-4 mr-2" />
-              Feeds
-            </Button>
-          </Link>
-        </div>
+      <nav className="flex-1 p-4 space-y-2">
+        <Link href="/dashboard">
+          <Button
+            variant={isActive("/dashboard") ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <LayoutDashboard className="w-4 h-4 mr-2" />
+            {!isCollapsed && "Dashboard"}
+          </Button>
+        </Link>
+
+        {/* Content Section */}
+        {!isCollapsed && (
+          <div className="px-2 py-1">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Content</h3>
+          </div>
+        )}
+        <Link href="/articles">
+          <Button
+            variant={isActive("/articles") ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            {!isCollapsed && "Articles"}
+          </Button>
+        </Link>
+        <Link href="/audio">
+          <Button
+            variant={isActive("/audio") ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <FileAudio className="w-4 h-4 mr-2" />
+            {!isCollapsed && "Audio"}
+          </Button>
+        </Link>
+        <Link href="/feeds">
+          <Button
+            variant={isActive("/feeds") ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <Rss className="w-4 h-4 mr-2" />
+            {!isCollapsed && "Feeds"}
+          </Button>
+        </Link>
+
+        {/* Admin Section */}
+        {!isCollapsed && (
+          <div className="px-2 py-1 mt-4">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Admin</h3>
+          </div>
+        )}
+        <Link href="/admin/tools">
+          <Button
+            variant={isActive("/admin/tools") ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <Shield className="w-4 h-4 mr-2" />
+            {!isCollapsed && "Reviewer Tool"}
+          </Button>
+        </Link>
+        <Link href="/settings">
+          <Button
+            variant={isActive("/settings") ? "secondary" : "ghost"}
+            className="w-full justify-start"
+          >
+            <Settings className="w-4 h-4 mr-2" />
+            {!isCollapsed && "Settings"}
+          </Button>
+        </Link>
       </nav>
 
-      {/* Bottom section */}
+      {/* User profile */}
       <div className="p-4 border-t border-gray-200">
-        <Button variant="ghost" className="w-full justify-start text-gray-600 hover:text-gray-900 mb-2">
-          <HelpCircle className="w-4 h-4 mr-3" />
-          Help
-        </Button>
-        <Button variant="ghost" className="w-full justify-start text-gray-600 hover:text-gray-900 mb-4">
-          <Settings className="w-4 h-4 mr-3" />
-          Settings
-        </Button>
-
-        {/* Usage indicator */}
-        <div className="mb-4">
-          <div className="text-xs text-gray-500 mb-2">86% of free records are used.</div>
-          <div className="w-full bg-gray-200 rounded-full h-1">
-            <div className="bg-orange-500 h-1 rounded-full" style={{ width: "86%" }}></div>
-          </div>
-        </div>
-
-        <Button variant="ghost" className="w-full justify-start text-gray-600 hover:text-gray-900 mb-4">
-          <ArrowUpRight className="w-4 h-4 mr-3" />
-          Upgrade subscription
-        </Button>
-
-        {/* User profile */}
-        <div className="flex items-center gap-2">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src="/placeholder-user.jpg" />
-            <AvatarFallback>SP</AvatarFallback>
+        <div className="flex items-center gap-3">
+          <Avatar>
+            <AvatarFallback>JD</AvatarFallback>
           </Avatar>
-          <div className="flex-1 min-w-0">
-            <div className="text-sm font-medium text-gray-900">Simon Prusin</div>
-            <div className="text-xs text-gray-500 truncate">simonprusin@gmail.com</div>
-          </div>
-          <ChevronDown className="w-4 h-4 text-gray-400" />
+          {!isCollapsed && (
+            <div>
+              <div className="text-sm font-medium">John Doe</div>
+              <div className="text-xs text-gray-500">Admin</div>
+            </div>
+          )}
         </div>
       </div>
     </div>

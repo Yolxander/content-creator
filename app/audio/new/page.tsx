@@ -44,9 +44,20 @@ import {
   Calendar,
   Tag,
   FileText as FileTextIcon,
+  Rss,
+  History,
+  Lock,
+  Globe2,
+  Pin,
+  ArrowUpDown,
+  Search,
+  Filter,
+  AlertCircle,
+  Trash2,
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
+import { Progress } from "@/components/ui/progress"
 
 const versions = [
   { id: 1, name: "Version 1", date: "Aug 9, 2024", active: true, language: "English" },
@@ -70,6 +81,41 @@ export default function NewAudioPage() {
   const [autoTranslate, setAutoTranslate] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState("en")
   const [scheduleDate, setScheduleDate] = useState("")
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [selectedLanguages, setSelectedLanguages] = useState(["en"])
+  const [selectedOrgs, setSelectedOrgs] = useState([])
+  const [autoRules, setAutoRules] = useState([])
+  const [activeTab, setActiveTab] = useState("content")
+
+  // Calculate completion status for each tab
+  const getTabStatus = () => {
+    const status = {
+      content: false,
+      rules: false,
+      targeting: false,
+      settings: false,
+    }
+
+    // Content tab validation
+    status.content = title.trim() !== "" && description.trim() !== ""
+
+    // Rules tab validation
+    status.rules = true // Optional for audio
+
+    // Targeting tab validation
+    status.targeting = selectedLanguages.length > 0
+
+    // Settings tab validation
+    status.settings = true // Always true as it's optional
+
+    return status
+  }
+
+  const tabStatus = getTabStatus()
+  const completionPercentage = Math.round(
+    (Object.values(tabStatus).filter(Boolean).length / Object.keys(tabStatus).length) * 100
+  )
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -98,14 +144,6 @@ export default function NewAudioPage() {
                 <Eye className="w-4 h-4 mr-2" />
                 Preview
               </Button>
-              <div className="flex items-center gap-1">
-                <Avatar className="w-6 h-6">
-                  <AvatarFallback className="text-xs">AR</AvatarFallback>
-                </Avatar>
-                <Avatar className="w-6 h-6">
-                  <AvatarFallback className="text-xs">MF</AvatarFallback>
-                </Avatar>
-              </div>
               <Button variant="ghost" size="icon">
                 <MoreHorizontal className="w-4 h-4" />
               </Button>
@@ -118,6 +156,15 @@ export default function NewAudioPage() {
                 Save Audio
               </Button>
             </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-600">Audio completion</span>
+              <span className="text-sm font-medium text-gray-900">{completionPercentage}%</span>
+            </div>
+            <Progress value={completionPercentage} className="h-2" />
           </div>
         </div>
 

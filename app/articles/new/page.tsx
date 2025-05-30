@@ -39,9 +39,25 @@ import {
   Upload,
   Languages,
   CheckCircle,
+  Clock,
+  FileAudio,
+  Calendar,
+  Tag,
+  FileText as FileTextIcon,
+  Rss,
+  History,
+  Lock,
+  Globe2,
+  Pin,
+  ArrowUpDown,
+  Search,
+  Filter,
+  AlertCircle,
+  Trash2,
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
+import { Progress } from "@/components/ui/progress"
 
 const versions = [
   { id: 1, name: "Version 1", date: "Aug 9, 2024", active: true, language: "English" },
@@ -64,6 +80,41 @@ export default function NewArticlePage() {
   const [enableComments, setEnableComments] = useState(true)
   const [autoTranslate, setAutoTranslate] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState("en")
+  const [title, setTitle] = useState("")
+  const [content, setContent] = useState("")
+  const [selectedLanguages, setSelectedLanguages] = useState(["en"])
+  const [selectedOrgs, setSelectedOrgs] = useState([])
+  const [autoRules, setAutoRules] = useState([])
+  const [activeTab, setActiveTab] = useState("content")
+
+  // Calculate completion status for each tab
+  const getTabStatus = () => {
+    const status = {
+      content: false,
+      rules: false,
+      targeting: false,
+      settings: false,
+    }
+
+    // Content tab validation
+    status.content = title.trim() !== "" && content.trim() !== ""
+
+    // Rules tab validation
+    status.rules = true // Optional for articles
+
+    // Targeting tab validation
+    status.targeting = selectedLanguages.length > 0
+
+    // Settings tab validation
+    status.settings = true // Always true as it's optional
+
+    return status
+  }
+
+  const tabStatus = getTabStatus()
+  const completionPercentage = Math.round(
+    (Object.values(tabStatus).filter(Boolean).length / Object.keys(tabStatus).length) * 100
+  )
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -112,6 +163,15 @@ export default function NewArticlePage() {
                 Save Article
               </Button>
             </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-gray-600">Article completion</span>
+              <span className="text-sm font-medium text-gray-900">{completionPercentage}%</span>
+            </div>
+            <Progress value={completionPercentage} className="h-2" />
           </div>
         </div>
 
