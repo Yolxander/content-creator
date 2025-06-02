@@ -14,9 +14,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Shield,
-  FolderOpen,
 } from "lucide-react"
 import { OrganizationSwitcher } from "@/components/OrganizationSwitcher"
+import { cn } from "@/lib/utils"
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
@@ -25,6 +25,29 @@ export function Sidebar() {
   const isActive = (path: string) => {
     return pathname === path
   }
+
+  const mainNavItems = [
+    {
+      title: 'Dashboard',
+      href: '/',
+      icon: LayoutDashboard,
+    },
+    {
+      title: 'Articles',
+      href: '/articles',
+      icon: FileText,
+    },
+    {
+      title: 'Audio',
+      href: '/audio',
+      icon: FileAudio,
+    },
+    {
+      title: 'Feeds',
+      href: '/feeds',
+      icon: Rss,
+    },
+  ]
 
   return (
     <div
@@ -55,49 +78,19 @@ export function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 p-4 space-y-2">
-        <Link href="/">
-          <Button
-            variant={isActive("/") ? "secondary" : "ghost"}
-            className="w-full justify-start"
+        {mainNavItems.map((item) => (
+          <Link
+            key={item.href}
+            href={item.href}
+            className={cn(
+              'flex items-center gap-3 rounded-lg px-3 py-2 text-gray-500 transition-all hover:text-gray-900',
+              pathname === item.href && 'bg-gray-100 text-gray-900'
+            )}
           >
-            <LayoutDashboard className="w-4 h-4 mr-2" />
-            {!isCollapsed && "Dashboard"}
-          </Button>
-        </Link>
-
-        {/* Content Section */}
-        {!isCollapsed && (
-          <div className="px-2 py-1">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Content</h3>
-          </div>
-        )}
-        <Link href="/articles">
-          <Button
-            variant={isActive("/articles") ? "secondary" : "ghost"}
-            className="w-full justify-start"
-          >
-            <FileText className="w-4 h-4 mr-2" />
-            {!isCollapsed && "Articles"}
-          </Button>
-        </Link>
-        <Link href="/audio">
-          <Button
-            variant={isActive("/audio") ? "secondary" : "ghost"}
-            className="w-full justify-start"
-          >
-            <FileAudio className="w-4 h-4 mr-2" />
-            {!isCollapsed && "Audio"}
-          </Button>
-        </Link>
-        <Link href="/feeds">
-          <Button
-            variant={isActive("/feeds") ? "secondary" : "ghost"}
-            className="w-full justify-start"
-          >
-            <Rss className="w-4 h-4 mr-2" />
-            {!isCollapsed && "Feeds"}
-          </Button>
-        </Link>
+            <item.icon className="h-4 w-4" />
+            {!isCollapsed && item.title}
+          </Link>
+        ))}
 
         {/* Admin Section */}
         {!isCollapsed && (
@@ -127,7 +120,7 @@ export function Sidebar() {
 
       {/* User profile */}
       <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-4">
           <Avatar>
             <AvatarFallback>JD</AvatarFallback>
           </Avatar>
@@ -138,6 +131,9 @@ export function Sidebar() {
             </div>
           )}
         </div>
+        <Button variant="outline" className="w-full" onClick={() => {/* handle logout here */}}>
+          {!isCollapsed && "Logout"}
+        </Button>
       </div>
     </div>
   )

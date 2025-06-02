@@ -59,6 +59,7 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
+import { FeedsSidebar } from "@/components/feeds/FeedsSidebar"
 
 const contentTypes = [
   { id: "articles", name: "Articles", icon: FileText },
@@ -138,7 +139,20 @@ const exampleContent = {
   ],
 }
 
+// Mock feed data for development
+const mockFeed = {
+  name: '',
+  description: '',
+  sourceUrl: '',
+  schedule: 'daily',
+  lastFetched: null,
+  status: 'draft',
+}
+
 export default function NewFeedPage() {
+  const [activeSection, setActiveSection] = useState('details')
+  const [activeSubsection, setActiveSubsection] = useState<string | undefined>()
+  const [feed, setFeed] = useState(mockFeed)
   const [feedType, setFeedType] = useState("manual")
   const [visibility, setVisibility] = useState("public")
   const [selectedLanguages, setSelectedLanguages] = useState(["en"])
@@ -149,278 +163,333 @@ export default function NewFeedPage() {
   const [selectedContentType, setSelectedContentType] = useState("articles")
   const [selectedContent, setSelectedContent] = useState([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [activeTab, setActiveTab] = useState("content")
-
-  // Calculate completion status for each tab
-  const getTabStatus = () => {
-    const status = {
-      content: false,
-      selection: false,
-      rules: false,
-      targeting: false,
-      settings: false,
-    }
-
-    // Content tab validation
-    status.content = title.trim() !== "" && description.trim() !== ""
-
-    // Selection tab validation
-    status.selection = selectedContent.length > 0
-
-    // Rules tab validation (if auto feed)
-    status.rules = feedType === "manual" || autoRules.length > 0
-
-    // Targeting tab validation
-    status.targeting = selectedLanguages.length > 0
-
-    // Settings tab validation
-    status.settings = true // Always true as it's optional
-
-    return status
-  }
-
-  const tabStatus = getTabStatus()
-  const completionPercentage = Math.round(
-    (Object.values(tabStatus).filter(Boolean).length / Object.keys(tabStatus).length) * 100
-  )
-
-  const handleContentTypeSelect = (type) => {
-    setSelectedContentType(type)
-  }
 
   const handleContentSelect = (content) => {
     if (selectedContent.find((item) => item.id === content.id)) {
-      setSelectedContent(selectedContent.filter((item) => item.id !== content.id))
+      setSelectedContent(selectedContent.filter((item) => item.id !== content.id));
     } else {
-      setSelectedContent([...selectedContent, content])
+      setSelectedContent([...selectedContent, content]);
     }
-  }
+  };
 
-  const handleSelectAll = () => {
-    const currentTypeContent = exampleContent[selectedContentType]
+  const handleSelectAll = (contentType) => {
+    const currentTypeContent = exampleContent[contentType];
     if (selectedContent.length === currentTypeContent.length) {
-      setSelectedContent([])
+      setSelectedContent([]);
     } else {
-      setSelectedContent(currentTypeContent)
+      setSelectedContent(currentTypeContent);
+    }
+  };
+
+  const handleSectionChange = (section: string, subsection?: string) => {
+    setActiveSection(section)
+    setActiveSubsection(subsection)
+    
+    if (subsection) {
+      // Find the element and scroll to it
+      const element = document.getElementById(subsection)
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
     }
   }
 
-  const getActionButtons = (context) => {
-    switch (context) {
-      case "feed":
-        return (
-          <>
-            <Button variant="ghost" size="sm">
-              <Pin className="w-4 h-4 mr-2" />
-              Pin to Top
-            </Button>
-            <Button variant="ghost" size="sm">
-              <ArrowUpDown className="w-4 h-4 mr-2" />
-              Change Order
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Remove
-            </Button>
-          </>
-        )
-      case "selection":
-        return (
-          <Button variant="ghost" size="sm">
-            <Plus className="w-4 h-4 mr-2" />
-            Add to Feed
-          </Button>
-        )
-      default:
-        return null
-    }
-  }
-
+  const renderFeedSection = () => {
+    switch (activeSection) {
+      case 'details':
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
-
-      {/* Main content */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/feeds">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="w-4 h-4" />
-                </Button>
-              </Link>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-gray-900">Create New Feed</h1>
-                <Badge variant="secondary" className="bg-gray-100 text-gray-700">
-                  DRAFT
-                </Badge>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium">Feed Details</h3>
+              <p className="text-sm text-gray-500">Basic information about your feed</p>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Feed Name</label>
+                <Input
+                  type="text"
+                  placeholder="Enter feed name"
+                  className="mt-1"
+                  value={feed.name}
+                  onChange={(e) => setFeed({ ...feed, name: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                  rows={3}
+                  placeholder="Enter feed description"
+                  value={feed.description}
+                  onChange={(e) => setFeed({ ...feed, description: e.target.value })}
+                />
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline">
-                <Eye className="w-4 h-4 mr-2" />
-                Preview
-              </Button>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-              <Button variant="outline">
-                <Share className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-              <Button>
-                <Save className="w-4 h-4 mr-2" />
-                Save Feed
-              </Button>
-            </div>
           </div>
-
-          {/* Progress bar */}
-          <div className="mt-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Feed completion</span>
-              <span className="text-sm font-medium text-gray-900">{completionPercentage}%</span>
+        );
+      case 'content':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium">Content Selection</h3>
+              <p className="text-sm text-gray-500">Manage content connected to this feed</p>
             </div>
-            <Progress value={completionPercentage} className="h-2" />
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 p-6 overflow-auto">
-          <Tabs defaultValue="feed" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="feed">Feed</TabsTrigger>
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="rules">Rules</TabsTrigger>
-              <TabsTrigger value="targeting">Targeting</TabsTrigger>
-              <TabsTrigger value="settings">Settings</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="feed" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Feed Content</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="border rounded-lg divide-y">
-                    <div className="p-4 bg-gray-50 flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Checkbox 
-                          id="select-all-feed" 
-                          checked={selectedContent.length > 0}
-                          onCheckedChange={handleSelectAll}
-                        />
-                        <Label htmlFor="select-all-feed" className="text-sm font-medium">Select All</Label>
+            <div className="space-y-6">
+              {/* Connected Content Section */}
+              <div className="bg-white rounded-lg border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-base font-medium">Connected Content</h4>
+                    <p className="text-sm text-gray-500">Content currently connected to this feed</p>
                       </div>
                       <div className="flex items-center gap-2">
-                        {getActionButtons("feed")}
+                    <Button variant="outline" size="sm" className="gap-2">
+                      <Plus className="h-4 w-4" />
+                      Connect Content
+                    </Button>
                       </div>
                     </div>
-                    <div className="p-4">
                       <div className="space-y-4">
-                        {selectedContent.map((content) => (
-                          <div key={content.id} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg">
-                            <Checkbox 
-                              id={`feed-${content.id}`}
-                              checked={selectedContent.some((item) => item.id === content.id)}
-                              onCheckedChange={() => handleContentSelect(content)}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                {content.id.startsWith("a") && <FileText className="w-4 h-4 text-gray-400" />}
-                                {content.id.startsWith("au") && <FileAudio className="w-4 h-4 text-gray-400" />}
-                                {content.id.startsWith("v") && <Video className="w-4 h-4 text-gray-400" />}
+                  {[...exampleContent.articles, ...exampleContent.audio].map((content) => (
+                    <div key={content.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
+                          {content.id.startsWith('a') ? (
+                            <FileText className="h-5 w-5 text-gray-500" />
+                          ) : (
+                            <FileAudio className="h-5 w-5 text-gray-500" />
+                          )}
+                          <div>
                                 <div className="font-medium">{content.title}</div>
-                              </div>
-                              <div className="text-sm text-gray-500 mt-1">
-                                Published by {content.author} • {content.date}
-                              </div>
+                            <div className="text-sm text-gray-500">
+                              By {content.author} • {content.date}
                             </div>
-                            <Badge variant="secondary" className={content.statusColor}>
-                              {content.status}
-                            </Badge>
                           </div>
-                        ))}
-                        {selectedContent.length === 0 && (
-                          <div className="text-center py-8 text-gray-500">
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                          {content.id.startsWith('a') ? 'Article' : 'Audio'}
+                        </Badge>
+                        <Select defaultValue="public">
+                          <SelectTrigger className="w-[120px]">
+                            <SelectValue placeholder="Visibility" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="public">Public</SelectItem>
+                            <SelectItem value="draft">Draft</SelectItem>
+                          </SelectContent>
+                        </Select>
                             <Button 
-                              variant="link" 
-                              className="text-blue-600 hover:text-blue-800"
-                              onClick={() => document.querySelector('[value="content"]').click()}
-                            >
-                              No content added to feed yet. Click here to select content.
+                          variant="ghost" 
+                          size="sm"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                          onClick={() => {
+                            // Handle detach content
+                            console.log('Detach content:', content.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
                             </Button>
-                          </div>
-                        )}
                       </div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  ))}
+                </div>
+              </div>
 
-            <TabsContent value="content" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Content Selection</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center gap-4">
-                    {contentTypes.map((type) => (
-                      <Button
-                        key={type.id}
-                        variant={selectedContentType === type.id ? "default" : "outline"}
-                        className="flex-1"
-                        onClick={() => handleContentTypeSelect(type.id)}
-                      >
-                        <type.icon className="w-4 h-4 mr-2" />
-                        {type.name}
-                      </Button>
-                    ))}
+              {/* Feed Settings */}
+              <div className="bg-white rounded-lg border p-6">
+                <h4 className="text-base font-medium mb-4">Feed Settings</h4>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">Default Content Visibility</div>
+                      <div className="text-sm text-gray-500">Set default visibility for newly connected content</div>
+                    </div>
+                    <Select defaultValue="public">
+                      <SelectTrigger className="w-[120px]">
+                        <SelectValue placeholder="Visibility" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">Public</SelectItem>
+                        <SelectItem value="draft">Draft</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
-                  <div className="relative">
-                    <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium">Auto-connect New Content</div>
+                      <div className="text-sm text-gray-500">Automatically connect new content to this feed</div>
+                    </div>
+                    <Switch />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'configuration':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium">Feed Configuration</h3>
+              <p className="text-sm text-gray-500">Configure feed settings and behavior</p>
+            </div>
+            <div className="space-y-6">
+              {/* Source Settings */}
+              <div id="source" className="bg-white rounded-lg border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-base font-medium">Source Settings</h4>
+                    <p className="text-sm text-gray-500">Configure the source URL and parsing options</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Source URL</label>
                     <Input 
-                      placeholder="Search content..." 
-                      className="pl-9"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
+                      type="url"
+                      placeholder="https://example.com/feed"
+                      className="mt-1"
+                      value={feed.sourceUrl}
+                      onChange={(e) => setFeed({ ...feed, sourceUrl: e.target.value })}
                     />
                   </div>
-                  <div className="border rounded-lg divide-y">
-                    <div className="p-4 bg-gray-50 flex items-center justify-between">
+                </div>
+              </div>
+
+              {/* Schedule Settings */}
+              <div id="schedule" className="bg-white rounded-lg border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-base font-medium">Schedule</h4>
+                    <p className="text-sm text-gray-500">Set up when and how often to fetch the feed</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Update Frequency</label>
+                    <select
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring-primary sm:text-sm"
+                      value={feed.schedule}
+                      onChange={(e) => setFeed({ ...feed, schedule: e.target.value })}
+                    >
+                      <option value="hourly">Hourly</option>
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Targeting Settings */}
+              <div id="targeting" className="bg-white rounded-lg border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-base font-medium">Targeting</h4>
+                    <p className="text-sm text-gray-500">Configure audience targeting settings</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-500">Targeting settings will be available soon.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rules Settings */}
+              <div id="rules" className="bg-white rounded-lg border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-base font-medium">Rules</h4>
+                    <p className="text-sm text-gray-500">Configure content inclusion rules</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-500">Rules configuration will be available soon.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Analytics Settings */}
+              <div id="analytics" className="bg-white rounded-lg border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-base font-medium">Analytics</h4>
+                    <p className="text-sm text-gray-500">View feed performance and statistics</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="p-4 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-500">Analytics will be available after the feed is created and starts fetching content.</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Advanced Settings */}
+              <div id="advanced" className="bg-white rounded-lg border p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h4 className="text-base font-medium">Advanced Settings</h4>
+                    <p className="text-sm text-gray-500">Configure advanced feed options</p>
+                  </div>
+                </div>
+                <div className="space-y-4">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <label className="ml-2 block text-sm text-gray-700">
+                      Enable automatic content categorization
+                    </label>
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    />
+                    <label className="ml-2 block text-sm text-gray-700">
+                      Enable content deduplication
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'content-articles':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-medium">Article Selection</h3>
+              <p className="text-sm text-gray-500">Select articles to include in your feed</p>
+            </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                       <div className="flex items-center gap-2">
                         <Checkbox 
-                          id="select-all" 
-                          checked={selectedContent.length === exampleContent[selectedContentType].length}
-                          onCheckedChange={handleSelectAll}
+                    id="select-all-articles"
+                    checked={selectedContent.length === exampleContent.articles.length}
+                    onCheckedChange={() => handleSelectAll('articles')}
                         />
-                        <Label htmlFor="select-all" className="text-sm font-medium">Select All</Label>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getActionButtons("selection")}
+                  <Label htmlFor="select-all-articles">Select All Articles</Label>
                       </div>
                     </div>
-                    <div className="p-4">
-                      <div className="space-y-4">
-                        {exampleContent[selectedContentType].map((content) => (
-                          <div key={content.id} className="flex items-center gap-4 p-3 hover:bg-gray-50 rounded-lg">
+              <div className="space-y-2">
+                {exampleContent.articles.map((content) => (
+                  <div key={content.id} className="flex items-center gap-4 p-4 border rounded-lg">
                             <Checkbox 
                               id={content.id}
                               checked={selectedContent.some((item) => item.id === content.id)}
                               onCheckedChange={() => handleContentSelect(content)}
                             />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2">
-                                {selectedContentType === "articles" && <FileText className="w-4 h-4 text-gray-400" />}
-                                {selectedContentType === "audio" && <FileAudio className="w-4 h-4 text-gray-400" />}
-                                {selectedContentType === "video" && <Video className="w-4 h-4 text-gray-400" />}
+                    <div className="flex-1">
                                 <div className="font-medium">{content.title}</div>
-                              </div>
-                              <div className="text-sm text-gray-500 mt-1">
-                                Published by {content.author} • {content.date}
+                      <div className="text-sm text-gray-500">
+                        By {content.author} • {content.date}
                               </div>
                             </div>
                             <Badge variant="secondary" className={content.statusColor}>
@@ -431,246 +500,97 @@ export default function NewFeedPage() {
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="rules" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Auto-Inclusion Rules</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Filter className="w-5 h-5 text-blue-500" />
+        );
+      case 'content-audio':
+        return (
+          <div className="space-y-6">
                       <div>
-                        <div className="font-medium">Content Type</div>
-                        <div className="text-sm text-gray-600">Select types of content to include</div>
+              <h3 className="text-lg font-medium">Audio Selection</h3>
+              <p className="text-sm text-gray-500">Select audio content to include in your feed</p>
+                      </div>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="select-all-audio"
+                    checked={selectedContent.length === exampleContent.audio.length}
+                    onCheckedChange={() => handleSelectAll('audio')}
+                  />
+                  <Label htmlFor="select-all-audio">Select All Audio</Label>
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Add Rule
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Tag className="w-5 h-5 text-blue-500" />
-                      <div>
-                        <div className="font-medium">Tags & Categories</div>
-                        <div className="text-sm text-gray-600">Filter by tags and categories</div>
+              <div className="space-y-2">
+                {exampleContent.audio.map((content) => (
+                  <div key={content.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                    <Checkbox
+                      id={content.id}
+                      checked={selectedContent.some((item) => item.id === content.id)}
+                      onCheckedChange={() => handleContentSelect(content)}
+                    />
+                    <div className="flex-1">
+                      <div className="font-medium">{content.title}</div>
+                      <div className="text-sm text-gray-500">
+                        By {content.author} • {content.date}
                       </div>
                     </div>
-                    <Button variant="outline" size="sm">
-                      Add Rule
-                    </Button>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Users className="w-5 h-5 text-blue-500" />
-                      <div>
-                        <div className="font-medium">Author & Organization</div>
-                        <div className="text-sm text-gray-600">Filter by content creators</div>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm">
-                      Add Rule
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="targeting" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Audience Targeting</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Language Selection */}
-                  <div>
-                    <Label className="text-base font-medium">Languages</Label>
-                    <div className="mt-3 space-y-3">
-                      {languages.map((lang) => (
-                        <div key={lang.code} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <span className="text-xl">{lang.flag}</span>
-                            <div>
-                              <div className="font-medium">{lang.name}</div>
-                              <div className="text-sm text-gray-600">
-                                {lang.code === "en" ? "Default" : "Additional"}
-                              </div>
-                            </div>
-                          </div>
-                          <Switch
-                            checked={selectedLanguages.includes(lang.code)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedLanguages([...selectedLanguages, lang.code])
-                              } else {
-                                setSelectedLanguages(selectedLanguages.filter((code) => code !== lang.code))
-                              }
-                            }}
-                          />
+                    <Badge variant="secondary" className={content.statusColor}>
+                      {content.status}
+                    </Badge>
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  {/* Organization Selection */}
-                  <div>
-                    <Label className="text-base font-medium">Organizations</Label>
-                    <div className="mt-3 space-y-3">
-                      {organizations.map((org) => (
-                        <div key={org.id} className="flex items-center justify-between p-4 border rounded-lg">
-                          <div className="flex items-center gap-3">
-                            <Users className="w-5 h-5 text-gray-400" />
-                            <div>
-                              <div className="font-medium">{org.name}</div>
-                              <div className="text-sm text-gray-600">Team members: 12</div>
                             </div>
-                          </div>
-                          <Switch
-                            checked={selectedOrgs.includes(org.id)}
-                            onCheckedChange={(checked) => {
-                              if (checked) {
-                                setSelectedOrgs([...selectedOrgs, org.id])
-                              } else {
-                                setSelectedOrgs(selectedOrgs.filter((id) => id !== org.id))
+        );
+      default:
+        return null;
                               }
-                            }}
-                          />
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+  };
 
-            <TabsContent value="settings" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Feed Settings</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Feed Information */}
-                  <div>
-                    <Label className="text-base font-medium mb-4">Feed Information</Label>
-                    <div className="space-y-4">
-                      <div>
-                        <Label htmlFor="title">Title</Label>
-                        <Input 
-                          id="title" 
-                          placeholder="Enter feed title" 
-                          value={title}
-                          onChange={(e) => setTitle(e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea 
-                          id="description" 
-                          placeholder="Enter feed description"
-                          value={description}
-                          onChange={(e) => setDescription(e.target.value)}
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label>Feed Type</Label>
-                          <div className="flex items-center gap-4 mt-2">
+  return (
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar />
+      <FeedsSidebar activeSection={activeSection} onSectionChange={handleSectionChange} />
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 p-6">
+          <div className="flex items-center justify-between mb-6">
                             <div className="flex items-center gap-2">
-                              <Switch
-                                checked={feedType === "manual"}
-                                onCheckedChange={(checked) => setFeedType(checked ? "manual" : "auto")}
-                              />
-                              <span className="text-sm">Manual</span>
+              <h1 className="text-2xl font-semibold text-gray-900">
+                {activeSection === 'details' ? 'Create New Feed' : 
+                 activeSection === 'content-articles' ? 'Article Selection' :
+                 activeSection === 'content-audio' ? 'Audio Selection' :
+                 activeSection === 'configuration' ? 'Feed Configuration' :
+                 'Create New Feed'}
+              </h1>
+              {activeSection === 'details' && (
+                <Badge variant="secondary" className="bg-gray-100 text-gray-700">
+                  DRAFT
+                </Badge>
+              )}
                             </div>
                             <div className="flex items-center gap-2">
-                              <Switch
-                                checked={feedType === "auto"}
-                                onCheckedChange={(checked) => setFeedType(checked ? "auto" : "manual")}
-                              />
-                              <span className="text-sm">Auto</span>
-                            </div>
-                          </div>
-                        </div>
-                        <div>
-                          <Label>Visibility</Label>
-                          <Select value={visibility} onValueChange={setVisibility}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="public">Public</SelectItem>
-                              <SelectItem value="org_only">Organization Only</SelectItem>
-                              <SelectItem value="internal">Internal</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
+              <Button variant="outline">Cancel</Button>
+              <Button>Save Feed</Button>
+                    </div>
+                  </div>
+
+          {/* Search */}
+                        <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Input placeholder="Search feed settings..." className="pl-9 w-64" />
                       </div>
                     </div>
                   </div>
 
-                  {/* Display Settings */}
-                  <div>
-                    <Label className="text-base font-medium">Display Settings</Label>
-                    <div className="mt-3 space-y-4">
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <Pin className="w-5 h-5 text-blue-500" />
-                          <div>
-                            <div className="font-medium">Pin Important Content</div>
-                            <div className="text-sm text-gray-600">Keep important items at the top</div>
-                          </div>
-                        </div>
-                        <Switch />
-                      </div>
-                      <div className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center gap-2">
-                          <ArrowUpDown className="w-5 h-5 text-blue-500" />
-                          <div>
-                            <div className="font-medium">Content Order</div>
-                            <div className="text-sm text-gray-600">Set how content is ordered</div>
-                          </div>
-                        </div>
-                        <Select defaultValue="recent">
-                          <SelectTrigger className="w-32">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="recent">Most Recent</SelectItem>
-                            <SelectItem value="popular">Most Popular</SelectItem>
-                            <SelectItem value="manual">Manual Order</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Version History */}
-                  <div>
-                    <Label className="text-base font-medium">Version History</Label>
-                    <div className="mt-3 space-y-3">
-                      <div className="p-4 border rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="font-medium">Initial Version</div>
-                          <Badge variant="secondary" className="bg-green-100 text-green-800">
-                            Current
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-gray-600">Created by Simon Prusin</p>
-                        <p className="text-xs text-gray-500 mt-1">Sep 12, 2024</p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+        {/* Feed Content */}
+        <div className="flex-1 overflow-auto p-6">
+          {renderFeedSection()}
         </div>
       </div>
     </div>
-  )
+  );
 } 

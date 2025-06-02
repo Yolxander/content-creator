@@ -14,8 +14,8 @@ import {
 const organizations = [
   {
     id: "1",
-    name: "Acme Inc",
-    logo: "A",
+    name: "Merjj",
+    logo: "M",
   },
   {
     id: "2",
