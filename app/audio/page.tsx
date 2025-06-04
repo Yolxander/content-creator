@@ -179,58 +179,6 @@ export default function AudioPage() {
             </div>
           </div>
 
-          {/* Stats cards */}
-          <div className="grid grid-cols-4 gap-6 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">Time Period</div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8">
-                      Last 7 days
-                      <ChevronDown className="w-4 h-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Last 7 days</DropdownMenuItem>
-                    <DropdownMenuItem>Last 30 days</DropdownMenuItem>
-                    <DropdownMenuItem>Last 90 days</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">Published</div>
-                <div className="flex items-center gap-2">
-                  <div className="text-2xl font-semibold">156</div>
-                  <div className="flex items-center text-green-600 text-sm">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    +12%
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">In Review</div>
-                <div className="flex items-center gap-2">
-                  <div className="text-2xl font-semibold">42</div>
-                  <div className="flex items-center text-orange-600 text-sm">
-                    <ArrowUpRight className="w-3 h-3 mr-1" />
-                    +8%
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">Drafts</div>
-                <div className="text-2xl font-semibold">23</div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
