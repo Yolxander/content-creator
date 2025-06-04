@@ -132,6 +132,7 @@ const getCategoryColor = (category: string) => {
 export default function ArticlesPage() {
   const [selectedArticles, setSelectedArticles] = useState(articles.filter((article) => article.selected))
   const [groupEnabled, setGroupEnabled] = useState(false)
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'timeline'>('list')
 
   const toggleArticleSelection = (articleId: number) => {
     const article = articles.find((a) => a.id === articleId)
@@ -144,6 +145,79 @@ export default function ArticlesPage() {
     }
   }
 
+  const renderTimelineView = () => {
+    // Group articles by date
+    const groupedArticles = articles.reduce((acc, article) => {
+      const date = article.lastModified
+      if (!acc[date]) {
+        acc[date] = []
+      }
+      acc[date].push(article)
+      return acc
+    }, {})
+
+    return (
+      <div className="p-6 space-y-8">
+        {Object.entries(groupedArticles).map(([date, articles]) => (
+          <div key={date} className="relative">
+            <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gray-200" />
+            <div className="relative pl-8">
+              <div className="absolute left-0 top-0 w-4 h-4 rounded-full bg-gray-200 border-4 border-white" />
+              <div className="mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">{date}</h3>
+              </div>
+              <div className="space-y-4">
+                {articles.map((article) => (
+                  <div
+                    key={article.id}
+                    className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={selectedArticles.some((a) => a.id === article.id)}
+                          onCheckedChange={() => toggleArticleSelection(article.id)}
+                        />
+                        <div>
+                          <div className="font-medium text-gray-900">{article.title}</div>
+                          <div className="text-sm text-gray-500">ID: {article.id}</div>
+                        </div>
+                      </div>
+                      <Badge variant="secondary" className={getStatusColor(article.status)}>
+                        {article.status.replace("_", " ")}
+                      </Badge>
+                    </div>
+                    <div className="mt-4 flex items-center gap-4 text-sm text-gray-500">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6">
+                          <AvatarFallback className="text-xs">
+                            {article.author
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>{article.author}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-4 h-4" />
+                        <span>{article.views}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Globe className="w-4 h-4" />
+                        <span>{article.languages}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
@@ -153,7 +227,7 @@ export default function ArticlesPage() {
         {/* Header */}
         <div className="bg-white border-b border-gray-200 p-6">
           <div className="flex items-center justify-between mb-6">
-            <h1 className="text-2xl font-semibold text-[">Articles</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Articles</h1>
             <div className="flex items-center gap-2">
               <Link href="/articles/new">
                 <Button className={"bg-[#05AFF2]"}>
@@ -175,71 +249,86 @@ export default function ArticlesPage() {
             </div>
           </div>
 
-          {/* Stats cards */}
-          <div className="grid grid-cols-4 gap-6 mb-6">
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">Time Period</div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8">
-                      Last 7 days
-                      <ChevronDown className="w-4 h-4 ml-2" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Last 7 days</DropdownMenuItem>
-                    <DropdownMenuItem>Last 30 days</DropdownMenuItem>
-                    <DropdownMenuItem>Last 90 days</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">Published</div>
-                <div className="flex items-center gap-2">
-                  <div className="text-2xl font-semibold">156</div>
-                  <div className="flex items-center text-green-600 text-sm">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    +12%
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">In Review</div>
-                <div className="flex items-center gap-2">
-                  <div className="text-2xl font-semibold">42</div>
-                  <div className="flex items-center text-orange-600 text-sm">
-                    <ArrowUpRight className="w-3 h-3 mr-1" />
-                    +8%
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="p-4">
-                <div className="text-sm text-gray-500 mb-1">Drafts</div>
-                <div className="text-2xl font-semibold">23</div>
-              </CardContent>
-            </Card>
-          </div>
+          {/*/!* Stats cards *!/*/}
+          {/*<div className="grid grid-cols-4 gap-6 mb-6">*/}
+          {/*  <Card>*/}
+          {/*    <CardContent className="p-4">*/}
+          {/*      <div className="text-sm text-gray-500 mb-1">Time Period</div>*/}
+          {/*      <DropdownMenu>*/}
+          {/*        <DropdownMenuTrigger asChild>*/}
+          {/*          <Button variant="ghost" size="sm" className="h-8">*/}
+          {/*            Last 7 days*/}
+          {/*            <ChevronDown className="w-4 h-4 ml-2" />*/}
+          {/*          </Button>*/}
+          {/*        </DropdownMenuTrigger>*/}
+          {/*        <DropdownMenuContent align="end">*/}
+          {/*          <DropdownMenuItem>Last 7 days</DropdownMenuItem>*/}
+          {/*          <DropdownMenuItem>Last 30 days</DropdownMenuItem>*/}
+          {/*          <DropdownMenuItem>Last 90 days</DropdownMenuItem>*/}
+          {/*        </DropdownMenuContent>*/}
+          {/*      </DropdownMenu>*/}
+          {/*    </CardContent>*/}
+          {/*  </Card>*/}
+          {/*  <Card>*/}
+          {/*    <CardContent className="p-4">*/}
+          {/*      <div className="text-sm text-gray-500 mb-1">Published</div>*/}
+          {/*      <div className="flex items-center gap-2">*/}
+          {/*        <div className="text-2xl font-semibold">156</div>*/}
+          {/*        <div className="flex items-center text-green-600 text-sm">*/}
+          {/*          <TrendingUp className="w-3 h-3 mr-1" />*/}
+          {/*          +12%*/}
+          {/*        </div>*/}
+          {/*      </div>*/}
+          {/*    </CardContent>*/}
+          {/*  </Card>*/}
+          {/*  <Card>*/}
+          {/*    <CardContent className="p-4">*/}
+          {/*      <div className="text-sm text-gray-500 mb-1">In Review</div>*/}
+          {/*      <div className="flex items-center gap-2">*/}
+          {/*        <div className="text-2xl font-semibold">42</div>*/}
+          {/*        <div className="flex items-center text-orange-600 text-sm">*/}
+          {/*          <ArrowUpRight className="w-3 h-3 mr-1" />*/}
+          {/*          +8%*/}
+          {/*        </div>*/}
+          {/*      </div>*/}
+          {/*    </CardContent>*/}
+          {/*  </Card>*/}
+          {/*  <Card>*/}
+          {/*    <CardContent className="p-4">*/}
+          {/*      <div className="text-sm text-gray-500 mb-1">Drafts</div>*/}
+          {/*      <div className="text-2xl font-semibold">23</div>*/}
+          {/*    </CardContent>*/}
+          {/*  </Card>*/}
+          {/*</div>*/}
 
           {/* Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" className="text-gray-900">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={viewMode === 'list' ? "text-gray-900" : "text-gray-500"}
+                  onClick={() => setViewMode('list')}
+                >
                   <List className="w-4 h-4 mr-2" />
                   List
                 </Button>
-                <Button variant="ghost" size="sm" className="text-gray-500">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={viewMode === 'grid' ? "text-gray-900" : "text-gray-500"}
+                  onClick={() => setViewMode('grid')}
+                >
                   <Grid3X3 className="w-4 h-4 mr-2" />
                   Grid
                 </Button>
-                <Button variant="ghost" size="sm" className="text-gray-500">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className={viewMode === 'timeline' ? "text-gray-900" : "text-gray-500"}
+                  onClick={() => setViewMode('timeline')}
+                >
                   <GitBranch className="w-4 h-4 mr-2" />
                   Timeline
                 </Button>
@@ -265,88 +354,92 @@ export default function ArticlesPage() {
           </div>
         </div>
 
-        {/* Table */}
-        <div className="flex-1 overflow-auto">
-          <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4" />
-                    ARTICLE
-                  </div>
-                </th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">AUTHOR</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">CATEGORY</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">VIEWS</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">LANGUAGES</th>
-                <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  <div className="flex items-center gap-1">
-                    LAST MODIFIED
-                    <ChevronUp className="w-3 h-3" />
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {articles.map((article) => (
-                <tr key={article.id} className="hover:bg-gray-50">
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <Checkbox
-                        checked={selectedArticles.some((a) => a.id === article.id)}
-                        onCheckedChange={() => toggleArticleSelection(article.id)}
-                      />
-                      <div>
-                        <div className="font-medium text-gray-900">{article.title}</div>
-                        <div className="text-sm text-gray-500">ID: {article.id}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
+        {/* Content */}
+        {viewMode === 'timeline' ? (
+          renderTimelineView()
+        ) : (
+          <div className="flex-1 overflow-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
+                <tr>
+                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <div className="flex items-center gap-2">
-                      <Avatar className="w-6 h-6">
-                        <AvatarFallback className="text-xs">
-                          {article.author
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm text-gray-900">{article.author}</span>
+                      <FileText className="w-4 h-4" />
+                      ARTICLE
                     </div>
-                  </td>
-                  <td className="p-4">
-                    <Badge variant="secondary" className={getCategoryColor(article.category)}>
-                      {article.category}
-                    </Badge>
-                  </td>
-                  <td className="p-4">
-                    <Badge variant="secondary" className={getStatusColor(article.status)}>
-                      {article.status.replace("_", " ")}
-                    </Badge>
-                  </td>
-                  <td className="p-4">
+                  </th>
+                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">AUTHOR</th>
+                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">CATEGORY</th>
+                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
+                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">VIEWS</th>
+                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">LANGUAGES</th>
+                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     <div className="flex items-center gap-1">
-                      <Eye className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-900">{article.views}</span>
+                      LAST MODIFIED
+                      <ChevronUp className="w-3 h-3" />
                     </div>
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-1">
-                      <Globe className="w-4 h-4 text-gray-400" />
-                      <span className="text-sm text-gray-900">{article.languages}</span>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-sm text-gray-500">{article.lastModified}</span>
-                  </td>
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {articles.map((article) => (
+                  <tr key={article.id} className="hover:bg-gray-50">
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={selectedArticles.some((a) => a.id === article.id)}
+                          onCheckedChange={() => toggleArticleSelection(article.id)}
+                        />
+                        <div>
+                          <div className="font-medium text-gray-900">{article.title}</div>
+                          <div className="text-sm text-gray-500">ID: {article.id}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6">
+                          <AvatarFallback className="text-xs">
+                            {article.author
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-gray-900">{article.author}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <Badge variant="secondary" className={getCategoryColor(article.category)}>
+                        {article.category}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <Badge variant="secondary" className={getStatusColor(article.status)}>
+                        {article.status.replace("_", " ")}
+                      </Badge>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-900">{article.views}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-1">
+                        <Globe className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-900">{article.languages}</span>
+                      </div>
+                    </td>
+                    <td className="p-4">
+                      <span className="text-sm text-gray-500">{article.lastModified}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         <BottomActionBar selectedCount={selectedArticles.length} itemType="articles" />
       </div>

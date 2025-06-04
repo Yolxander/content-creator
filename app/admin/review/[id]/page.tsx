@@ -342,7 +342,7 @@ export default function ReviewSubmissionPage({ params }) {
                       onChange={(e) => setFeedback(e.target.value)}
                     />
                     <div className="flex justify-end">
-                      <Button>
+                      <Button className={"bg-[#05AFF2]"}>
                         <MessageSquare className="w-4 h-4 mr-2" />
                         Send Feedback
                       </Button>

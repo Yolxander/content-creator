@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
+  const router = useRouter()
 
   const isActive = (path: string) => {
     return pathname === path
@@ -48,6 +49,11 @@ export function Sidebar() {
       icon: Rss,
     },
   ]
+
+  const handleLogout = () => {
+    // Here you would typically handle any logout logic like clearing tokens, etc.
+    router.push("/auth")
+  }
 
   return (
     <div
@@ -131,7 +137,7 @@ export function Sidebar() {
             </div>
           )}
         </div>
-        <Button variant="outline" className="w-full" onClick={() => {/* handle logout here */}}>
+        <Button variant="outline" className="w-full" onClick={handleLogout}>
           {!isCollapsed && "Logout"}
         </Button>
       </div>

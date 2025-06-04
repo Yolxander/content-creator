@@ -118,7 +118,7 @@ export default function AdminToolsPage() {
                 <Filter className="w-4 h-4 mr-2" />
                 Filter
               </Button>
-              <Button>
+              <Button className={"bg-[#05AFF2]"}>
                 <ArrowUpRight className="w-4 h-4 mr-2" />
                 Export
               </Button>
