@@ -19,22 +19,31 @@ import {
   Sparkles,
   Target,
   Mail,
-  FileAudio,
-  Music,
-  Waveform,
-  Image as ImageIcon,
+  Globe,
+  Video,
+  ImageIcon,
   Upload,
   Languages,
   CheckCircle,
   Clock,
+  FileAudio,
   Calendar,
   Tag,
-  Globe,
+  FileText as FileTextIcon,
+  Rss,
+  History,
   Lock,
+  Globe2,
+  Pin,
+  ArrowUpDown,
   Search,
   Filter,
   AlertCircle,
   Trash2,
+  Waveform,
+  Volume2,
+  Mic,
+  Music,
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
@@ -70,8 +79,7 @@ export default function NewAudioPage() {
     const status = {
       audio: false,
       waveform: false,
-      cover: false,
-      music: false,
+      media: false,
       translation: false,
       settings: false,
     }
@@ -80,13 +88,10 @@ export default function NewAudioPage() {
     status.audio = title.trim() !== "" && description.trim() !== ""
 
     // Waveform section validation
-    status.waveform = true // Optional
+    status.waveform = true // Optional for audio
 
-    // Cover section validation
-    status.cover = true // Optional
-
-    // Music section validation
-    status.music = true // Optional
+    // Media section validation
+    status.media = true // Optional for audio
 
     // Translation section validation
     status.translation = selectedLanguages.length > 0
@@ -109,6 +114,7 @@ export default function NewAudioPage() {
 
   const handleInitialTranslate = async () => {
     // TODO: Implement actual translation API call
+    // This is a mock translation for demonstration
     await new Promise(resolve => setTimeout(resolve, 5000))
     console.log("Initial translation completed")
   }
@@ -190,133 +196,78 @@ export default function NewAudioPage() {
               <CardTitle>Waveform Editor</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="h-32 bg-gray-100 rounded-lg flex items-center justify-center">
-                <Waveform className="w-12 h-12 text-gray-400" />
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <Label>Waveform Style</Label>
-                  <Select defaultValue="default">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="default">Default</SelectItem>
-                      <SelectItem value="minimal">Minimal</SelectItem>
-                      <SelectItem value="gradient">Gradient</SelectItem>
-                      <SelectItem value="bars">Bars</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Color Theme</Label>
-                  <Select defaultValue="blue">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select color" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="blue">Blue</SelectItem>
-                      <SelectItem value="purple">Purple</SelectItem>
-                      <SelectItem value="green">Green</SelectItem>
-                      <SelectItem value="orange">Orange</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )
-      case 'cover':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Cover Art</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-sm text-gray-600 mb-2">Upload cover art</p>
-                <p className="text-xs text-gray-500 mb-4">Supports JPG, PNG, WebP (max 10MB)</p>
-                <Button variant="outline">
-                  <Upload className="w-4 h-4 mr-2" />
-                  Choose Image
-                </Button>
-              </div>
-              <div className="space-y-4">
-                <div>
-                  <Label>Cover Style</Label>
-                  <Select defaultValue="default">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select style" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="default">Default</SelectItem>
-                      <SelectItem value="minimal">Minimal</SelectItem>
-                      <SelectItem value="gradient">Gradient</SelectItem>
-                      <SelectItem value="pattern">Pattern</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label>Layout</Label>
-                  <Select defaultValue="square">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select layout" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="square">Square</SelectItem>
-                      <SelectItem value="circle">Circle</SelectItem>
-                      <SelectItem value="rectangle">Rectangle</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )
-      case 'music':
-        return (
-          <Card>
-            <CardHeader>
-              <CardTitle>Background Music</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Music className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-sm text-gray-600 mb-2">Upload background music</p>
-                <p className="text-xs text-gray-500 mb-4">Supports MP3, WAV (max 50MB)</p>
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                <Waveform className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-sm text-gray-600 mb-2">Upload an audio file to edit its waveform</p>
+                <p className="text-xs text-gray-500 mb-4">Supports MP3, WAV, M4A (max 100MB)</p>
                 <Button variant="outline">
                   <Upload className="w-4 h-4 mr-2" />
                   Choose File
                 </Button>
               </div>
               <div className="space-y-4">
-                <div>
-                  <Label>Music Category</Label>
-                  <Select defaultValue="ambient">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ambient">Ambient</SelectItem>
-                      <SelectItem value="upbeat">Upbeat</SelectItem>
-                      <SelectItem value="calm">Calm</SelectItem>
-                      <SelectItem value="energetic">Energetic</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center justify-between">
+                  <Label>Volume</Label>
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="w-4 h-4 text-gray-500" />
+                    <Input type="range" min="0" max="100" defaultValue="80" className="w-32" />
+                  </div>
                 </div>
-                <div>
-                  <Label>Volume Level</Label>
-                  <Select defaultValue="medium">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select volume" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
-                    </SelectContent>
-                  </Select>
+                <div className="flex items-center justify-between">
+                  <Label>Noise Reduction</Label>
+                  <div className="flex items-center gap-2">
+                    <Mic className="w-4 h-4 text-gray-500" />
+                    <Input type="range" min="0" max="100" defaultValue="50" className="w-32" />
+                  </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label>Equalizer</Label>
+                  <div className="flex items-center gap-2">
+                    <Music className="w-4 h-4 text-gray-500" />
+                    <Button variant="outline" size="sm">Open Equalizer</Button>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )
+      case 'media':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Media Assets</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Cover Image Upload */}
+              <div>
+                <Label className="text-base font-medium">Cover Image</Label>
+                <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-sm text-gray-600 mb-2">Upload cover image</p>
+                  <p className="text-xs text-gray-500 mb-4">Supports JPG, PNG, WebP (max 10MB)</p>
+                  <Button variant="outline">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose Image
+                  </Button>
+                </div>
+              </div>
+
+              {/* Subtitles */}
+              <div>
+                <Label className="text-base font-medium">Subtitles</Label>
+                <div className="mt-2 space-y-2">
+                  {languages.slice(0, 3).map((lang) => (
+                    <div key={lang.code} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{lang.flag}</span>
+                        <span className="font-medium">{lang.name}</span>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        <Upload className="w-4 h-4 mr-1" />
+                        Upload SRT
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
