@@ -58,6 +58,8 @@ import {
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
 import { Progress } from "@/components/ui/progress"
+import { TranslationEditModal } from "@/components/TranslationEditModal"
+import { InitialTranslationModal } from "@/components/InitialTranslationModal"
 
 const versions = [
   { id: 1, name: "Version 1", date: "Aug 9, 2024", active: true, language: "English" },
@@ -86,6 +88,10 @@ export default function NewArticlePage() {
   const [selectedOrgs, setSelectedOrgs] = useState([])
   const [autoRules, setAutoRules] = useState([])
   const [activeTab, setActiveTab] = useState("content")
+  const [isTranslationModalOpen, setIsTranslationModalOpen] = useState(false)
+  const [selectedLanguageForTranslation, setSelectedLanguageForTranslation] = useState<typeof languages[0] | null>(null)
+  const [summary, setSummary] = useState("")
+  const [isInitialTranslationModalOpen, setIsInitialTranslationModalOpen] = useState(false)
 
   // Calculate completion status for each tab
   const getTabStatus = () => {
@@ -115,6 +121,18 @@ export default function NewArticlePage() {
   const completionPercentage = Math.round(
     (Object.values(tabStatus).filter(Boolean).length / Object.keys(tabStatus).length) * 100
   )
+
+  const handleTranslationSave = (translation: { title: string; summary: string; content: string }) => {
+    // TODO: Implement saving translation
+    console.log("Saving translation:", translation)
+  }
+
+  const handleInitialTranslate = async () => {
+    // TODO: Implement actual translation API call
+    // This is a mock translation for demonstration
+    await new Promise(resolve => setTimeout(resolve, 5000))
+    console.log("Initial translation completed")
+  }
 
   return (
     <div className="flex h-screen bg-gray-50">
@@ -349,7 +367,19 @@ export default function NewArticlePage() {
                                   Pending
                                 </Badge>
                               )}
-                              <Button variant="outline" size="sm">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => {
+                                  if (lang.code === "en") {
+                                    setSelectedLanguageForTranslation(lang)
+                                    setIsTranslationModalOpen(true)
+                                  } else {
+                                    setSelectedLanguageForTranslation(lang)
+                                    setIsInitialTranslationModalOpen(true)
+                                  }
+                                }}
+                              >
                                 {lang.code === "en" ? "Edit" : "Translate"}
                               </Button>
                             </div>
@@ -485,6 +515,35 @@ export default function NewArticlePage() {
           </div>
         </div>
       </div>
+
+      {/* Add TranslationEditModal */}
+      {selectedLanguageForTranslation && (
+        <TranslationEditModal
+          isOpen={isTranslationModalOpen}
+          onClose={() => {
+            setIsTranslationModalOpen(false)
+            setSelectedLanguageForTranslation(null)
+          }}
+          language={selectedLanguageForTranslation}
+          originalTitle={title}
+          originalSummary={summary}
+          originalContent={content}
+          onSave={handleTranslationSave}
+        />
+      )}
+
+      {/* Add InitialTranslationModal */}
+      {selectedLanguageForTranslation && (
+        <InitialTranslationModal
+          isOpen={isInitialTranslationModalOpen}
+          onClose={() => {
+            setIsInitialTranslationModalOpen(false)
+            setSelectedLanguageForTranslation(null)
+          }}
+          language={selectedLanguageForTranslation}
+          onTranslate={handleInitialTranslate}
+        />
+      )}
     </div>
   )
 }
