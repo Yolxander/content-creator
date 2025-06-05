@@ -12,38 +12,21 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   ArrowLeft,
+  CheckCircle,
   Eye,
+  FileAudio,
+  Globe,
+  ImageIcon,
+  Languages,
+  Mail,
   MoreHorizontal,
+  Music,
   Save,
   Share,
   Sparkles,
   Target,
-  Mail,
-  Globe,
-  Video,
-  ImageIcon,
   Upload,
-  Languages,
-  CheckCircle,
-  Clock,
-  FileAudio,
-  Calendar,
-  Tag,
-  FileText as FileTextIcon,
-  Rss,
-  History,
-  Lock,
-  Globe2,
-  Pin,
-  ArrowUpDown,
-  Search,
-  Filter,
-  AlertCircle,
-  Trash2,
-  Waveform,
   Volume2,
-  Mic,
-  Music,
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
@@ -197,7 +180,7 @@ export default function NewAudioPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <Waveform className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                <Volume2 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                 <p className="text-sm text-gray-600 mb-2">Upload an audio file to edit its waveform</p>
                 <p className="text-xs text-gray-500 mb-4">Supports MP3, WAV, M4A (max 100MB)</p>
                 <Button variant="outline">
