@@ -254,61 +254,61 @@ export default function AudioPage() {
                         }}
                       />
                       <Link href={`/audio/edit/${audio.id}`} className="flex-1">
-                        <div>
-                          <div className="font-medium text-gray-900">{audio.title}</div>
-                          <div className="text-sm text-gray-500">ID: {audio.id}</div>
-                        </div>
+                      <div>
+                        <div className="font-medium text-gray-900">{audio.title}</div>
+                        <div className="text-sm text-gray-500">ID: {audio.id}</div>
+                      </div>
                       </Link>
                     </div>
                   </td>
                   <td className="p-4">
                     <Link href={`/audio/edit/${audio.id}`} className="block">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarFallback className="text-xs">
-                            {audio.author
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-gray-900">{audio.author}</span>
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <Avatar className="w-6 h-6">
+                        <AvatarFallback className="text-xs">
+                          {audio.author
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm text-gray-900">{audio.author}</span>
+                    </div>
                     </Link>
                   </td>
                   <td className="p-4">
                     <Link href={`/audio/edit/${audio.id}`} className="block">
-                      <Badge variant="secondary" className={getCategoryColor(audio.category)}>
-                        {audio.category}
-                      </Badge>
+                    <Badge variant="secondary" className={getCategoryColor(audio.category)}>
+                      {audio.category}
+                    </Badge>
                     </Link>
                   </td>
                   <td className="p-4">
                     <Link href={`/audio/edit/${audio.id}`} className="block">
-                      <Badge variant="secondary" className={getStatusColor(audio.status)}>
-                        {audio.status.replace("_", " ")}
-                      </Badge>
+                    <Badge variant="secondary" className={getStatusColor(audio.status)}>
+                      {audio.status.replace("_", " ")}
+                    </Badge>
                     </Link>
                   </td>
                   <td className="p-4">
                     <Link href={`/audio/edit/${audio.id}`} className="block">
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{audio.duration}</span>
-                      </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-900">{audio.duration}</span>
+                    </div>
                     </Link>
                   </td>
                   <td className="p-4">
                     <Link href={`/audio/edit/${audio.id}`} className="block">
-                      <div className="flex items-center gap-1">
-                        <Languages className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{audio.languages}</span>
-                      </div>
+                    <div className="flex items-center gap-1">
+                      <Languages className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm text-gray-900">{audio.languages}</span>
+                    </div>
                     </Link>
                   </td>
                   <td className="p-4">
                     <Link href={`/audio/edit/${audio.id}`} className="block">
-                      <span className="text-sm text-gray-500">{audio.lastModified}</span>
+                    <span className="text-sm text-gray-500">{audio.lastModified}</span>
                     </Link>
                   </td>
                 </tr>

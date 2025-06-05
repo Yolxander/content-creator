@@ -1,10 +1,14 @@
-'use client'
+"use client"
 
-import { createContext, useContext, useEffect, useState } from 'react'
-import { User } from '@supabase/supabase-js'
-import { supabase } from './supabase'
+import { createContext, useContext, useEffect, useState } from "react"
 
-type AuthContextType = {
+interface User {
+  id: string
+  email: string
+  name?: string
+}
+
+interface AuthContextType {
   user: User | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
@@ -19,34 +23,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Check active sessions and sets the user
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    // Listen for changes on auth state
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null)
-      setLoading(false)
-    })
-
-    return () => subscription.unsubscribe()
+    // Check for stored user data
+    const storedUser = localStorage.getItem("user")
+    if (storedUser) {
+      setUser(JSON.parse(storedUser))
+    }
+    setLoading(false)
   }, [])
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) throw error
+    // Mock sign in
+    const mockUser = { id: "1", email, name: "Test User" }
+    setUser(mockUser)
+    localStorage.setItem("user", JSON.stringify(mockUser))
   }
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password })
-    if (error) throw error
+    // Mock sign up
+    const mockUser = { id: "1", email, name: "Test User" }
+    setUser(mockUser)
+    localStorage.setItem("user", JSON.stringify(mockUser))
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    if (error) throw error
+    setUser(null)
+    localStorage.removeItem("user")
   }
 
   return (
@@ -59,7 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider')
+    throw new Error("useAuth must be used within an AuthProvider")
   }
   return context
 } 

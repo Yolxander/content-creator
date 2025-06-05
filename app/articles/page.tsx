@@ -394,61 +394,61 @@ export default function ArticlesPage() {
                           }}
                         />
                         <Link href={`/articles/edit/${article.id}`} className="flex-1">
-                          <div>
-                            <div className="font-medium text-gray-900">{article.title}</div>
-                            <div className="text-sm text-gray-500">ID: {article.id}</div>
-                          </div>
+                        <div>
+                          <div className="font-medium text-gray-900">{article.title}</div>
+                          <div className="text-sm text-gray-500">ID: {article.id}</div>
+                        </div>
                         </Link>
                       </div>
                     </td>
                     <td className="p-4">
                       <Link href={`/articles/edit/${article.id}`} className="block">
-                        <div className="flex items-center gap-2">
-                          <Avatar className="w-6 h-6">
-                            <AvatarFallback className="text-xs">
-                              {article.author
-                                .split(" ")
-                                .map((n) => n[0])
-                                .join("")}
-                            </AvatarFallback>
-                          </Avatar>
-                          <span className="text-sm text-gray-900">{article.author}</span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <Avatar className="w-6 h-6">
+                          <AvatarFallback className="text-xs">
+                            {article.author
+                              .split(" ")
+                              .map((n) => n[0])
+                              .join("")}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="text-sm text-gray-900">{article.author}</span>
+                      </div>
                       </Link>
                     </td>
                     <td className="p-4">
                       <Link href={`/articles/edit/${article.id}`} className="block">
-                        <Badge variant="secondary" className={getCategoryColor(article.category)}>
-                          {article.category}
-                        </Badge>
+                      <Badge variant="secondary" className={getCategoryColor(article.category)}>
+                        {article.category}
+                      </Badge>
                       </Link>
                     </td>
                     <td className="p-4">
                       <Link href={`/articles/edit/${article.id}`} className="block">
-                        <Badge variant="secondary" className={getStatusColor(article.status)}>
-                          {article.status.replace("_", " ")}
-                        </Badge>
+                      <Badge variant="secondary" className={getStatusColor(article.status)}>
+                        {article.status.replace("_", " ")}
+                      </Badge>
                       </Link>
                     </td>
                     <td className="p-4">
                       <Link href={`/articles/edit/${article.id}`} className="block">
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-900">{article.views}</span>
-                        </div>
+                      <div className="flex items-center gap-1">
+                        <Eye className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-900">{article.views}</span>
+                      </div>
                       </Link>
                     </td>
                     <td className="p-4">
                       <Link href={`/articles/edit/${article.id}`} className="block">
-                        <div className="flex items-center gap-1">
-                          <Globe className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-gray-900">{article.languages}</span>
-                        </div>
+                      <div className="flex items-center gap-1">
+                        <Globe className="w-4 h-4 text-gray-400" />
+                        <span className="text-sm text-gray-900">{article.languages}</span>
+                      </div>
                       </Link>
                     </td>
                     <td className="p-4">
                       <Link href={`/articles/edit/${article.id}`} className="block">
-                        <span className="text-sm text-gray-500">{article.lastModified}</span>
+                      <span className="text-sm text-gray-500">{article.lastModified}</span>
                       </Link>
                     </td>
                   </tr>
