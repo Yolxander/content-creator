@@ -12,13 +12,26 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   ArrowLeft,
+  CalendarIcon,
+  ChevronDown,
   Eye,
   MoreHorizontal,
   Save,
   Share,
+  Users,
   Sparkles,
   Target,
   Mail,
+  Home,
+  Inbox,
+  FileText,
+  Briefcase,
+  Database,
+  HelpCircle,
+  Settings,
+  BarChart3,
+  Plus,
+  ArrowUpRight,
   Globe,
   Video,
   ImageIcon,
@@ -26,20 +39,33 @@ import {
   Languages,
   CheckCircle,
   Clock,
-  FileText,
+  FileAudio,
   Calendar,
   Tag,
-  FileAudio,
-  Headphones,
-  Waveform,
-  ChevronRight,
-  ChevronLeft,
+  FileText as FileTextIcon,
+  Rss,
+  History,
+  Lock,
+  Globe2,
+  Pin,
+  ArrowUpDown,
+  Search,
+  Filter,
+  AlertCircle,
+  Trash2,
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
 import { Progress } from "@/components/ui/progress"
 import { TranslationEditModal } from "@/components/TranslationEditModal"
 import { InitialTranslationModal } from "@/components/InitialTranslationModal"
+import { ArticleSidebar } from "@/components/articles/ArticleSidebar"
+
+const versions = [
+  { id: 1, name: "Version 1", date: "Aug 9, 2024", active: true, language: "English" },
+  { id: 2, name: "Version 2", date: "Aug 8, 2024", active: false, language: "Spanish" },
+  { id: 3, name: "Version 3", date: "Aug 7, 2024", active: false, language: "French" },
+]
 
 const languages = [
   { code: "en", name: "English", flag: "🇺🇸" },
@@ -50,37 +76,51 @@ const languages = [
   { code: "pt", name: "Portuguese", flag: "🇵🇹" },
 ]
 
-const steps = [
-  { id: 'audio', title: 'Audio', description: 'Upload and edit audio' },
-  { id: 'media', title: 'Media', description: 'Add cover art and images' },
-  { id: 'translation', title: 'Translation', description: 'Manage translations' },
-  { id: 'settings', title: 'Settings', description: 'Configure audio settings' },
-]
-
-export default function NewAudioPage() {
-  const [currentStep, setCurrentStep] = useState(0)
+export default function NewArticlePage() {
+  const [activeVersion, setActiveVersion] = useState(1)
   const [isPublished, setIsPublished] = useState(false)
   const [enableComments, setEnableComments] = useState(true)
   const [autoTranslate, setAutoTranslate] = useState(false)
   const [selectedLanguage, setSelectedLanguage] = useState("en")
   const [title, setTitle] = useState("")
-  const [description, setDescription] = useState("")
+  const [content, setContent] = useState("")
   const [selectedLanguages, setSelectedLanguages] = useState(["en"])
+  const [selectedOrgs, setSelectedOrgs] = useState([])
+  const [autoRules, setAutoRules] = useState([])
+  const [activeSection, setActiveSection] = useState("content")
   const [isTranslationModalOpen, setIsTranslationModalOpen] = useState(false)
   const [selectedLanguageForTranslation, setSelectedLanguageForTranslation] = useState<typeof languages[0] | null>(null)
+  const [summary, setSummary] = useState("")
   const [isInitialTranslationModalOpen, setIsInitialTranslationModalOpen] = useState(false)
 
-  const handleNext = () => {
-    if (currentStep < steps.length - 1) {
-      setCurrentStep(currentStep + 1)
+  // Calculate completion status for each section
+  const getSectionStatus = () => {
+    const status = {
+      content: false,
+      media: false,
+      translation: false,
+      settings: false,
     }
+
+    // Content section validation
+    status.content = title.trim() !== "" && content.trim() !== ""
+
+    // Media section validation
+    status.media = true // Optional for articles
+
+    // Translation section validation
+    status.translation = selectedLanguages.length > 0
+
+    // Settings section validation
+    status.settings = true // Always true as it's optional
+
+    return status
   }
 
-  const handlePrevious = () => {
-    if (currentStep > 0) {
-      setCurrentStep(currentStep - 1)
-    }
-  }
+  const sectionStatus = getSectionStatus()
+  const completionPercentage = Math.round(
+    (Object.values(sectionStatus).filter(Boolean).length / Object.keys(sectionStatus).length) * 100
+  )
 
   const handleTranslationSave = (translation: { title: string; summary: string; content: string }) => {
     // TODO: Implement saving translation
@@ -94,75 +134,64 @@ export default function NewAudioPage() {
     console.log("Initial translation completed")
   }
 
-  const renderStep = () => {
-    switch (steps[currentStep].id) {
-      case 'audio':
+  const renderSection = () => {
+    switch (activeSection) {
+      case 'content':
         return (
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                Audio Content
+                Article Content
                 <Button variant="ghost" size="sm" className="ml-auto">
                   <Sparkles className="w-4 h-4 mr-1" />
-                  AI Enhanced
+                  AI Generated
                 </Button>
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Audio Upload */}
+            <CardContent className="space-y-4">
               <div>
-                <Label className="text-base font-medium">Audio File</Label>
-                <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <FileAudio className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-sm text-gray-600 mb-2">Upload audio file</p>
-                  <p className="text-xs text-gray-500 mb-4">Supports MP3, WAV, M4A (max 500MB)</p>
-                  <Button variant="outline">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose File
-                  </Button>
-                </div>
+                <Label htmlFor="title">Title</Label>
+                <Input id="title" placeholder="Enter article title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <div className="text-xs text-gray-500 mt-1">41/60 characters</div>
               </div>
-
-              {/* Audio Details */}
-              <div className="space-y-4">
+              <div>
+                <Label htmlFor="summary">Summary</Label>
+                <Textarea id="summary" placeholder="Enter article summary..." className="min-h-[80px]" value={summary} onChange={(e) => setSummary(e.target.value)} />
+                <div className="text-xs text-gray-500 mt-1">248/250 characters</div>
+              </div>
+              <div>
+                <Label htmlFor="body">Body</Label>
+                <Textarea id="body" placeholder="Write your article content here..." className="min-h-[300px]" value={content} onChange={(e) => setContent(e.target.value)} />
+                <div className="text-xs text-gray-500 mt-1">Rich text editor with formatting options</div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" placeholder="Enter audio title" value={title} onChange={(e) => setTitle(e.target.value)} />
-                  <div className="text-xs text-gray-500 mt-1">41/60 characters</div>
+                  <Label htmlFor="author">Author</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select author" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="adam">Adam Rogers</SelectItem>
+                      <SelectItem value="mike">Mike Fitzgerald</SelectItem>
+                      <SelectItem value="sarah">Sarah Johnson</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea id="description" placeholder="Enter audio description..." className="min-h-[100px]" value={description} onChange={(e) => setDescription(e.target.value)} />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="author">Author</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select author" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="adam">Adam Rogers</SelectItem>
-                        <SelectItem value="mike">Mike Fitzgerald</SelectItem>
-                        <SelectItem value="sarah">Sarah Johnson</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div>
-                    <Label htmlFor="category">Category</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="marketing">Marketing</SelectItem>
-                        <SelectItem value="strategy">Strategy</SelectItem>
-                        <SelectItem value="tech">Tech</SelectItem>
-                        <SelectItem value="industry">Industry</SelectItem>
-                        <SelectItem value="interview">Interview</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  <Label htmlFor="category">Category</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="marketing">Marketing</SelectItem>
+                      <SelectItem value="strategy">Strategy</SelectItem>
+                      <SelectItem value="seo">SEO</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="social">Social Media</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
             </CardContent>
@@ -175,31 +204,50 @@ export default function NewAudioPage() {
               <CardTitle>Media Assets</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Cover Art Upload */}
+              {/* Video Upload */}
               <div>
-                <Label className="text-base font-medium">Cover Art</Label>
-                <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-sm text-gray-600 mb-2">Upload cover art</p>
-                  <p className="text-xs text-gray-500 mb-4">Supports JPG, PNG, WebP (max 10MB)</p>
-                  <Button variant="outline">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Choose Image
-                  </Button>
-                </div>
-              </div>
-
-              {/* Additional Media */}
-              <div>
-                <Label className="text-base font-medium">Additional Media</Label>
+                <Label className="text-base font-medium">Video (Multi-platform)</Label>
                 <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-sm text-gray-600 mb-2">Upload additional media</p>
-                  <p className="text-xs text-gray-500 mb-4">Supports images, videos, and documents</p>
+                  <p className="text-sm text-gray-600 mb-2">Upload video files</p>
+                  <p className="text-xs text-gray-500 mb-4">Supports MP4, MOV, AVI (max 500MB)</p>
                   <Button variant="outline">
                     <Upload className="w-4 h-4 mr-2" />
                     Choose Files
                   </Button>
+                </div>
+              </div>
+
+              {/* Images Upload */}
+              <div>
+                <Label className="text-base font-medium">Images</Label>
+                <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-sm text-gray-600 mb-2">Upload images</p>
+                  <p className="text-xs text-gray-500 mb-4">Supports JPG, PNG, WebP (max 10MB each)</p>
+                  <Button variant="outline">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Choose Images
+                  </Button>
+                </div>
+              </div>
+
+              {/* Subtitles */}
+              <div>
+                <Label className="text-base font-medium">Subtitles</Label>
+                <div className="mt-2 space-y-2">
+                  {languages.slice(0, 3).map((lang) => (
+                    <div key={lang.code} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-lg">{lang.flag}</span>
+                        <span className="font-medium">{lang.name}</span>
+                      </div>
+                      <Button variant="outline" size="sm">
+                        <Upload className="w-4 h-4 mr-1" />
+                        Upload SRT
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
@@ -292,13 +340,13 @@ export default function NewAudioPage() {
         return (
           <Card>
             <CardHeader>
-              <CardTitle>Audio Settings</CardTitle>
+              <CardTitle>Article Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">Featured Audio</span>
+                  <span className="text-sm font-medium">Featured Article</span>
                 </div>
                 <Switch checked={isPublished} onCheckedChange={setIsPublished} />
               </div>
@@ -327,6 +375,7 @@ export default function NewAudioPage() {
   return (
     <div className="flex h-screen bg-gray-50">
       <Sidebar />
+      <ArticleSidebar activeSection={activeSection} onSectionChange={setActiveSection} />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col">
@@ -334,13 +383,13 @@ export default function NewAudioPage() {
         <div className="bg-white border-b border-gray-200 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link href="/audio">
+              <Link href="/articles">
                 <Button variant="ghost" size="icon">
                   <ArrowLeft className="w-4 h-4" />
                 </Button>
               </Link>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-gray-900">Create New Audio</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Create New Article</h1>
                 <Badge variant="secondary" className="bg-gray-100 text-gray-700">
                   DRAFT
                 </Badge>
@@ -368,7 +417,7 @@ export default function NewAudioPage() {
               </Button>
               <Button className={"bg-[#05AFF2]"}>
                 <Save className="w-4 h-4 mr-2" />
-                Save Audio
+                Save Article
               </Button>
             </div>
           </div>
@@ -376,86 +425,16 @@ export default function NewAudioPage() {
           {/* Progress bar */}
           <div className="mt-4">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Audio completion</span>
-              <span className="text-sm font-medium text-[#05AFF2]">{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
+              <span className="text-sm text-gray-600">Article completion</span>
+              <span className="text-sm font-medium text-[#05AFF2]">{completionPercentage}%</span>
             </div>
-            <Progress value={((currentStep + 1) / steps.length) * 100} className="h-2" />
-          </div>
-
-          {/* Steps */}
-          <div className="mt-6">
-            <div className="flex items-center justify-between relative">
-              {/* Progress line */}
-              <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 -z-10" />
-              
-              {steps.map((step, index) => (
-                <div
-                  key={step.id}
-                  className="flex flex-col items-center relative"
-                >
-                  {/* Step circle */}
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 transition-colors ${
-                      index === currentStep
-                        ? "bg-[#05AFF2] text-white ring-4 ring-[#05AFF2]/20"
-                        : index < currentStep
-                        ? "bg-gray-900 text-white"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
-                  >
-                    {index < currentStep ? (
-                      <CheckCircle className="w-4 h-4" />
-                    ) : (
-                      index + 1
-                    )}
-                  </div>
-                  
-                  {/* Step text */}
-                  <div className="text-center">
-                    <div className={`font-medium ${
-                      index === currentStep
-                        ? "text-[#05AFF2]"
-                        : index < currentStep
-                        ? "text-gray-900"
-                        : "text-gray-500"
-                    }`}>
-                      {step.title}
-                    </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {step.description}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <Progress value={completionPercentage} className="h-2" />
           </div>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-auto p-6">
-          {renderStep()}
-        </div>
-
-        {/* Navigation */}
-        <div className="bg-white border-t border-gray-200 p-4">
-          <div className="flex items-center justify-between">
-            <Button
-              variant="outline"
-              onClick={handlePrevious}
-              disabled={currentStep === 0}
-            >
-              <ChevronLeft className="w-4 h-4 mr-2" />
-              Previous
-            </Button>
-            <Button
-              className={"bg-[#05AFF2]"}
-              onClick={handleNext}
-              disabled={currentStep === steps.length - 1}
-            >
-              Next
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
+          {renderSection()}
         </div>
       </div>
 
@@ -469,8 +448,8 @@ export default function NewAudioPage() {
           }}
           language={selectedLanguageForTranslation}
           originalTitle={title}
-          originalSummary={description}
-          originalContent={description}
+          originalSummary={summary}
+          originalContent={content}
           onSave={handleTranslationSave}
         />
       )}
@@ -489,4 +468,4 @@ export default function NewAudioPage() {
       )}
     </div>
   )
-} 
+}
