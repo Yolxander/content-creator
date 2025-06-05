@@ -409,7 +409,7 @@ export default function NewAudioPage() {
                 </Button>
               </Link>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-gray-900">Create New Audio</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Edit Audio</h1>
                 <Badge variant="secondary" className="bg-gray-100 text-gray-700">
                   DRAFT
                 </Badge>

@@ -389,7 +389,7 @@ export default function NewArticlePage() {
                 </Button>
               </Link>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-gray-900">Create New Article</h1>
+                <h1 className="text-xl font-semibold text-gray-900">Edit Article</h1>
                 <Badge variant="secondary" className="bg-gray-100 text-gray-700">
                   DRAFT
                 </Badge>
