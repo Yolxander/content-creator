@@ -45,49 +45,49 @@ export function FeedsSidebar({ activeSection, onSectionChange }: FeedsSidebarPro
         },
       ],
     },
-    {
-      title: 'Feed Configuration',
-      section: 'configuration',
-      icon: Settings,
-      subItems: [
-        {
-          title: 'Source Settings',
-          section: 'configuration',
-          subsection: 'source',
-          icon: Link,
-        },
-        {
-          title: 'Schedule',
-          section: 'configuration',
-          subsection: 'schedule',
-          icon: Clock,
-        },
-        {
-          title: 'Targeting',
-          section: 'configuration',
-          subsection: 'targeting',
-          icon: Target,
-        },
-        {
-          title: 'Rules',
-          section: 'configuration',
-          subsection: 'rules',
-          icon: Filter,
-        },
-        {
-          title: 'Analytics',
-          section: 'configuration',
-          subsection: 'analytics',
-          icon: BarChart,
-        },
-        {
-          title: 'Advanced Settings',
-          section: 'configuration',
-          subsection: 'advanced',
-          icon: Settings,
-        },
-      ],
-    },
+    // {
+    //   title: 'Feed Configuration',
+    //   section: 'configuration',
+    //   icon: Settings,
+    //   subItems: [
+    //     {
+    //       title: 'Source Settings',
+    //       section: 'configuration',
+    //       subsection: 'source',
+    //       icon: Link,
+    //     },
+    //     {
+    //       title: 'Schedule',
+    //       section: 'configuration',
+    //       subsection: 'schedule',
+    //       icon: Clock,
+    //     },
+    //     {
+    //       title: 'Targeting',
+    //       section: 'configuration',
+    //       subsection: 'targeting',
+    //       icon: Target,
+    //     },
+    //     {
+    //       title: 'Rules',
+    //       section: 'configuration',
+    //       subsection: 'rules',
+    //       icon: Filter,
+    //     },
+    //     {
+    //       title: 'Analytics',
+    //       section: 'configuration',
+    //       subsection: 'analytics',
+    //       icon: BarChart,
+    //     },
+    //     {
+    //       title: 'Advanced Settings',
+    //       section: 'configuration',
+    //       subsection: 'advanced',
+    //       icon: Settings,
+    //     },
+    //   ],
+    // },
   ]
 
   return (

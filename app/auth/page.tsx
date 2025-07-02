@@ -6,23 +6,75 @@ import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function AuthPage() {
   const router = useRouter();
+  const { signIn, signUp, loading } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Login form state
+  const [loginData, setLoginData] = useState({
+    email: "",
+    password: "",
+  });
 
   // Registration form state
   const [registerData, setRegisterData] = useState({
+    fullName: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
 
   // Handlers
-  const handleRegister = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // After registration, redirect to onboarding page
-    router.push("/onboarding");
+    setError(null);
+
+    if (!loginData.email || !loginData.password) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    const result = await signIn(loginData.email, loginData.password);
+    
+    if (result.error) {
+      setError(result.error.message || "Login failed");
+    }
+  };
+
+  const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!registerData.fullName || !registerData.email || !registerData.password || !registerData.confirmPassword) {
+      setError("Please fill in all fields");
+      return;
+    }
+
+    if (registerData.password !== registerData.confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (registerData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      return;
+    }
+
+    const result = await signUp(
+      registerData.email, 
+      registerData.password, 
+      registerData.fullName, 
+      registerData.confirmPassword
+    );
+    
+    if (result.error) {
+      setError(result.error.message || "Registration failed");
+    }
   };
 
   return (
@@ -52,18 +104,46 @@ export default function AuthPage() {
               <span className="text-[#05AFF2]">CCP</span>
             </span>
           </div>
+
+          {/* Error Alert */}
+          {error && (
+            <Alert className="mb-4 w-full max-w-md">
+              <AlertDescription className="text-red-600">{error}</AlertDescription>
+            </Alert>
+          )}
+
           {/* Auth Forms */}
           {!showRegister && (
             <>
-              <form className="flex flex-col gap-4 w-full rounded-lg p-8">
-                <label className="text-base font-medium text-gray-700">Username or email</label>
-                <Input type="text" placeholder="johnsmith007" className="mb-2" />
+              <form className="flex flex-col gap-4 w-full rounded-lg p-8" onSubmit={handleLogin}>
+                <label className="text-base font-medium text-gray-700">Email</label>
+                <Input 
+                  type="email" 
+                  placeholder="johnsmith@example.com" 
+                  className="mb-2"
+                  value={loginData.email}
+                  onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
+                  required
+                />
                 <label className="text-base font-medium text-gray-700">Password</label>
-                <Input type="password" placeholder="**********" className="mb-2" />
+                <Input 
+                  type="password" 
+                  placeholder="**********" 
+                  className="mb-2"
+                  value={loginData.password}
+                  onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
+                  required
+                />
                 <div className="flex justify-end mb-4">
                   <Link href="#" className="text-[#05AFF2] text-base hover:underline">Forgot password?</Link>
                 </div>
-                <Button type="submit" className="w-full bg-[#05AFF2] hover:bg-[#0486b1] text-white">Sign in</Button>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-[#05AFF2] hover:bg-[#0486b1] text-white"
+                  disabled={loading}
+                >
+                  {loading ? "Signing in..." : "Sign in"}
+                </Button>
               </form>
               <div className="flex items-center w-full my-6">
                 <div className="flex-grow h-px bg-gray-200" />
@@ -83,13 +163,45 @@ export default function AuthPage() {
           {/* Registration Form */}
           {showRegister && (
             <form className="flex flex-col gap-4 w-full rounded-lg p-8" onSubmit={handleRegister}>
+              <label className="text-base font-medium text-gray-700">Full Name</label>
+              <Input 
+                type="text" 
+                required 
+                placeholder="John Smith" 
+                value={registerData.fullName} 
+                onChange={e => setRegisterData({ ...registerData, fullName: e.target.value })} 
+              />
               <label className="text-base font-medium text-gray-700">Email</label>
-              <Input type="email" required placeholder="you@email.com" value={registerData.email} onChange={e => setRegisterData({ ...registerData, email: e.target.value })} />
+              <Input 
+                type="email" 
+                required 
+                placeholder="you@email.com" 
+                value={registerData.email} 
+                onChange={e => setRegisterData({ ...registerData, email: e.target.value })} 
+              />
               <label className="text-base font-medium text-gray-700">Password</label>
-              <Input type="password" required placeholder="Password" value={registerData.password} onChange={e => setRegisterData({ ...registerData, password: e.target.value })} />
+              <Input 
+                type="password" 
+                required 
+                placeholder="Password" 
+                value={registerData.password} 
+                onChange={e => setRegisterData({ ...registerData, password: e.target.value })} 
+              />
               <label className="text-base font-medium text-gray-700">Confirm Password</label>
-              <Input type="password" required placeholder="Confirm Password" value={registerData.confirmPassword} onChange={e => setRegisterData({ ...registerData, confirmPassword: e.target.value })} />
-              <Button type="submit" className="w-full bg-[#05AFF2] hover:bg-[#0486b1] text-white mt-2">Register</Button>
+              <Input 
+                type="password" 
+                required 
+                placeholder="Confirm Password" 
+                value={registerData.confirmPassword} 
+                onChange={e => setRegisterData({ ...registerData, confirmPassword: e.target.value })} 
+              />
+              <Button 
+                type="submit" 
+                className="w-full bg-[#05AFF2] hover:bg-[#0486b1] text-white mt-2"
+                disabled={loading}
+              >
+                {loading ? "Creating account..." : "Register"}
+              </Button>
               <div className="text-center mt-4 text-base w-full">
                 Already have an account?{' '}
                 <button className="text-[#05AFF2] hover:underline" onClick={() => setShowRegister(false)}>Sign in</button>
