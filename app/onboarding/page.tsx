@@ -19,7 +19,7 @@ const steps = [
   },
   {
     icon: FaClipboardCheck,
-    title: "Overview",
+    title: "Review",
     desc: "Review and confirm your information."
   },
 ];
@@ -74,8 +74,8 @@ export default function OnboardingPage() {
             const updatedUser = { ...user, profile: true };
             localStorage.setItem("user", JSON.stringify(updatedUser));
           }
-          // Redirect to dashboard or next page after successful onboarding
-          window.location.href = '/overview';
+          // Redirect to home page after successful onboarding
+          window.location.href = '/';
         }
       } catch (error) {
         console.error('Onboarding submission failed:', error);

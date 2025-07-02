@@ -21,10 +21,10 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If user is authenticated and trying to access auth page, redirect to overview
+  // If user is authenticated and trying to access auth page, redirect to home
   if (token && isPublicPath) {
     const url = request.nextUrl.clone()
-    url.pathname = '/overview'
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 

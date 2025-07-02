@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/lib/auth-context"
 
 const navigation = [
-  { name: "Overview", href: "/overview", icon: "Home" },
+  { name: "Home", href: "/", icon: "Home" },
   { name: "Content", href: "/content", icon: "FileText" },
   { name: "Articles", href: "/articles", icon: "FileText" },
   { name: "Audio", href: "/audio", icon: "Headphones" },

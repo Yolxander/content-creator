@@ -305,9 +305,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const token = localStorage.getItem("authToken")
       if (token) {
         console.log('Logging out with token:', token)
-        // Note: The v3 API documentation doesn't show a logout endpoint
-        // You may need to check with your backend team for the correct logout endpoint
-        await apiRequest("/auth/logout", "POST", {
+        // Call the v3 API logout endpoint
+        await apiRequest("/api/v3/auth/logout", "POST", {
           organization_id: 2
         }, {
           Authorization: `Bearer ${token}`,
@@ -316,11 +315,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error("Logout error:", error)
     } finally {
+      // Remove all user data from localStorage
       localStorage.removeItem("user")
       localStorage.removeItem("authToken")
-      // Also remove token from cookie
+      // Remove token from cookie
       document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT"
+      // Clear user state
       setUser(null)
+      // Redirect to auth page
       router.push("/auth")
     }
   }

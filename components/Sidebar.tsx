@@ -17,11 +17,13 @@ import {
 } from "lucide-react"
 import { OrganizationSwitcher } from "@/components/OrganizationSwitcher"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth-context"
 
 export function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
+  const { user, signOut } = useAuth()
 
   const isActive = (path: string) => {
     return pathname === path
@@ -50,9 +52,12 @@ export function Sidebar() {
     },
   ]
 
-  const handleLogout = () => {
-    // Here you would typically handle any logout logic like clearing tokens, etc.
-    router.push("/auth")
+  const handleLogout = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error("Logout failed:", error)
+    }
   }
 
   return (
@@ -128,12 +133,12 @@ export function Sidebar() {
       <div className="p-4 border-t border-gray-200">
         <div className="flex items-center gap-3 mb-4">
           <Avatar>
-            <AvatarFallback>JD</AvatarFallback>
+            <AvatarFallback>{user?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}</AvatarFallback>
           </Avatar>
           {!isCollapsed && (
             <div>
-              <div className="text-sm font-medium">John Doe</div>
-              <div className="text-xs text-gray-500">Admin</div>
+              <div className="text-sm font-medium">{user?.name || 'User'}</div>
+              <div className="text-xs text-gray-500">{user?.email}</div>
             </div>
           )}
         </div>

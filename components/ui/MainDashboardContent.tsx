@@ -8,7 +8,7 @@ import { useAuth } from "@/lib/auth-context"
 // Mock data
 const mockContent = [
   { id: 1, title: "Getting Started Guide", type: "article", status: "published", date: "2024-03-15" },
-  { id: 2, title: "Product Overview", type: "article", status: "draft", date: "2024-03-14" },
+          { id: 2, title: "Product Home", type: "article", status: "draft", date: "2024-03-14" },
   { id: 3, title: "Welcome Podcast", type: "audio", status: "published", date: "2024-03-13" },
 ]
 
