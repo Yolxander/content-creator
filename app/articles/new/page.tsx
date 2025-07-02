@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -48,6 +48,7 @@ import { Sidebar } from "@/components/Sidebar"
 import { Progress } from "@/components/ui/progress"
 import { TranslationEditModal } from "@/components/TranslationEditModal"
 import { InitialTranslationModal } from "@/components/InitialTranslationModal"
+import { createArticleFromWizard, CreateArticleData, getArticleCategoriesForDropdown, ArticleCategory } from "@/actions/article-actions"
 
 const languages = [
   { code: "en", name: "English", flag: "🇺🇸" },
@@ -160,6 +161,25 @@ export default function NewArticlePage() {
   })
   
   const [translations, setTranslations] = useState<Record<string, ArticleCreatorTranslation>>({})
+  const [categories, setCategories] = useState<ArticleCategory[]>([])
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false)
+
+  // Load categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      setIsLoadingCategories(true)
+      try {
+        const categoriesData = await getArticleCategoriesForDropdown()
+        setCategories(categoriesData)
+      } catch (error) {
+        console.error('Failed to load categories:', error)
+      } finally {
+        setIsLoadingCategories(false)
+      }
+    }
+
+    loadCategories()
+  }, [])
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -278,19 +298,24 @@ export default function NewArticlePage() {
       updated_at: now
     }
     
-    const finalData: WizardData = {
+    const finalData: CreateArticleData = {
       article_creators: [articleCreator],
       article_creator_translation: translationEntries,
       article_settings: [articleSettings]
     }
     
-    console.log("Final article data:", finalData)
-    
-    // TODO: Send to API
-    // await saveArticleToDatabase(finalData)
-    
-    // For now, just log the data
-    alert("Article saved! Check console for the data structure.")
+    try {
+      console.log("Sending article data to API:", finalData)
+      const result = await createArticleFromWizard(finalData)
+      console.log("Article created successfully:", result)
+      alert("Article saved successfully!")
+      
+      // Redirect to articles list or edit page
+      // window.location.href = '/articles'
+    } catch (error) {
+      console.error("Failed to save article:", error)
+      alert("Failed to save article. Please try again.")
+    }
   }
 
   const renderStep = () => {
@@ -356,15 +381,21 @@ export default function NewArticlePage() {
                 <div>
                   <Label htmlFor="category">Category</Label>
                   <Select value={contentForm.category} onValueChange={(value) => setContentForm(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
+                    <SelectTrigger disabled={isLoadingCategories}>
+                      <SelectValue placeholder={isLoadingCategories ? "Loading categories..." : "Select category"} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="1">Marketing</SelectItem>
-                      <SelectItem value="2">Strategy</SelectItem>
-                      <SelectItem value="3">Tech</SelectItem>
-                      <SelectItem value="4">Industry</SelectItem>
-                      <SelectItem value="5">Interview</SelectItem>
+                      {isLoadingCategories ? (
+                        <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                      ) : categories.length > 0 ? (
+                        categories.map((category) => (
+                          <SelectItem key={category.id} value={category.id.toString()}>
+                            {category.title}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="no-categories" disabled>No categories available</SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
