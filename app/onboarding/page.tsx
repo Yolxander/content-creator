@@ -3,6 +3,8 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { FaBuilding, FaUserTie, FaClipboardCheck } from "react-icons/fa";
+import { submitOnboarding } from "@/actions/profile-actions";
+import { useAuth } from "@/lib/auth-context";
 
 const steps = [
   {
@@ -23,6 +25,7 @@ const steps = [
 ];
 
 export default function OnboardingPage() {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [form, setForm] = useState({
     organization_id: 1,
@@ -58,6 +61,26 @@ export default function OnboardingPage() {
 
   const handleBack = () => {
     if (step > 1) setStep(step - 1);
+  };
+
+  const handleFinalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (validateStep()) {
+      try {
+        const result = await submitOnboarding(form);
+        if (result) {
+          // Update the user's profile status in localStorage
+          if (user) {
+            const updatedUser = { ...user, profile: true };
+            localStorage.setItem("user", JSON.stringify(updatedUser));
+          }
+          // Redirect to dashboard or next page after successful onboarding
+          window.location.href = '/overview';
+        }
+      } catch (error) {
+        console.error('Onboarding submission failed:', error);
+      }
+    }
   };
 
   // Card height for both columns
@@ -102,7 +125,7 @@ export default function OnboardingPage() {
               <h1 className="text-2xl font-semibold text-gray-900">{steps[step - 1].title}</h1>
               <p className="text-gray-500 text-base max-w-lg">{steps[step - 1].desc}</p>
             </div>
-            <form className="flex flex-col gap-6" onSubmit={step < 3 ? handleNext : (e) => { e.preventDefault(); /* handle final submit here */ }}>
+            <form className="flex flex-col gap-6" onSubmit={step < 3 ? handleNext : handleFinalSubmit}>
               {step === 1 && (
                 <>
                   <div>

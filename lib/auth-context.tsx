@@ -197,6 +197,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data && data.success && data.data && data.data.token) {
         console.log('Auth token received:', data.data.token)
         console.log('Full auth response:', data)
+        console.log('Profile data in response:', data.data.profile)
         
         const user = {
           id: data.data.firebase_uuid || '1', // Use firebase_uuid as id
@@ -206,7 +207,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           firebase_uuid: data.data.firebase_uuid,
           roles: data.data.roles,
           is_notifications: data.data.is_notifications,
-          profile: null // Will be set later if needed
+          profile: data.data.profile || null // Use profile from response if available
         }
         setUser(user)
         localStorage.setItem("user", JSON.stringify(user))
@@ -219,11 +220,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storedToken = localStorage.getItem('authToken')
         console.log('Auth token stored in localStorage:', storedToken)
         console.log('Token length:', storedToken?.length)
+        console.log('User object saved to localStorage:', user)
 
         // Redirect based on profile status
+        console.log('User profile status:', user.profile)
         if (user.profile) {
-          router.push("/dashboard")
+          console.log('User has profile, redirecting to home')
+          router.push("/")
         } else {
+          console.log('User has no profile, redirecting to onboarding')
           router.push("/onboarding")
         }
 
