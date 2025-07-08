@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -42,7 +42,7 @@ import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
 import { BottomActionBar } from "@/components/BottomActionBar"
 import { BulkActionModal } from "@/components/BulkActionModal"
-import { getArticles } from "@/actions/article-actions"
+import { getArticles, searchArticles } from "@/actions/article-actions"
 import { useAuth } from "@/lib/auth-context"
 
 // Interface for the article data structure
@@ -118,6 +118,60 @@ export default function ArticlesPage() {
     isOpen: false,
     action: null
   })
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  // Debounced search handler
+  useEffect(() => {
+    if (!searchQuery) {
+      setSearchResults([]);
+      setShowSearch(false);
+      return;
+    }
+    setSearchLoading(true);
+    setShowSearch(true);
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(async () => {
+      try {
+        const res = await searchArticles({
+          q: searchQuery,
+          locale: "en",
+          limit: 10,
+          program_id: selectedProgramId || undefined,
+        });
+        setSearchResults(res?.data?.articles || []);
+      } catch (e) {
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+    return () => {
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    };
+  }, [searchQuery, selectedProgramId]);
+
+  // Close search dropdown on click outside
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (
+        searchInputRef.current &&
+        !searchInputRef.current.contains(e.target as Node)
+      ) {
+        setShowSearch(false);
+      }
+    }
+    if (showSearch) {
+      document.addEventListener("mousedown", handleClick);
+    } else {
+      document.removeEventListener("mousedown", handleClick);
+    }
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showSearch]);
 
   // Load programs from localStorage (from organization switcher)
   useEffect(() => {
@@ -736,9 +790,38 @@ export default function ArticlesPage() {
               </div >
             </div>
             <div className="flex items-center gap-2">
-              <div className="relative">
+              <div className="relative group w-72 focus-within:w-[350px] transition-all duration-300">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input placeholder="Search articles..." className="pl-9 w-64" />
+                <Input
+                  ref={searchInputRef}
+                  placeholder="Search articles..."
+                  className="pl-9 w-64 group-focus-within:w-[300px] transition-all duration-300"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onFocus={() => searchQuery && setShowSearch(true)}
+                  autoComplete="off"
+                />
+                {showSearch && (
+                  <div className="absolute z-50 left-0 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-auto">
+                    {searchLoading ? (
+                      <div className="p-4 text-gray-500 text-center">Searching...</div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="p-4 text-gray-500 text-center">No articles found</div>
+                    ) : (
+                      <ul>
+                        {searchResults.map(article => (
+                          <li key={article.id} className="px-4 py-3 hover:bg-gray-50 cursor-pointer flex flex-col border-b last:border-b-0">
+                            <Link href={`/articles/edit/${article.id}`} onClick={() => setShowSearch(false)}>
+                              <span className="font-medium text-gray-900" dangerouslySetInnerHTML={{ __html: highlightMatch(article.title, searchQuery) }} />
+                              <span className="block text-xs text-gray-500 mt-1">{article.article_author}</span>
+                              <span className="block text-xs text-gray-400">{article.category?.title || ''}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
               </div>
               <Button variant="ghost" size="icon">
                 <MoreHorizontal className="w-4 h-4" />
@@ -997,4 +1080,11 @@ export default function ArticlesPage() {
     />
     </>
   )
+}
+
+// Helper to highlight search matches
+function highlightMatch(text: string, query: string) {
+  if (!query) return text;
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+  return text.replace(regex, '<mark class="bg-yellow-200">$1</mark>');
 }

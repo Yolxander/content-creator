@@ -90,6 +90,20 @@ export interface UpdateArticleSettingsData {
   article_setting_translations?: any[]
 }
 
+// Types for searchArticles
+export interface SearchArticlesParams {
+  q?: string;
+  program_id?: number;
+  category_id?: number;
+  locale: string;
+  limit?: number;
+  offset?: number;
+  sort_by?: 'title' | 'article_author' | 'article_date_and_time' | 'created_at';
+  sort_direction?: 'asc' | 'desc';
+  date_from?: string;
+  date_to?: string;
+}
+
 // Base API configuration
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'
 const API_VERSION = 'v3'
@@ -362,6 +376,13 @@ export async function updateProgramArticleSettings(
     console.error('Failed to update article settings:', error)
     throw error
   }
+}
+
+/**
+ * Search articles
+ */
+export async function searchArticles(params: SearchArticlesParams) {
+  return apiCall('/articles/search', 'POST', params);
 }
 
 // Error handling utilities
