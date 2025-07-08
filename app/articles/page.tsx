@@ -39,6 +39,7 @@ import {
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
 import { BottomActionBar } from "@/components/BottomActionBar"
+import { BulkActionModal } from "@/components/BulkActionModal"
 import { getArticles } from "@/actions/article-actions"
 import { useAuth } from "@/lib/auth-context"
 
@@ -99,6 +100,13 @@ export default function ArticlesPage() {
   const [loading, setLoading] = useState(true)
   const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null)
   const [availablePrograms, setAvailablePrograms] = useState<Array<{id: number, name: string}>>([])
+  const [bulkActionModal, setBulkActionModal] = useState<{
+    isOpen: boolean
+    action: 'publish' | 'translate' | 'export' | 'delete' | null
+  }>({
+    isOpen: false,
+    action: null
+  })
 
   // Load programs from localStorage (from organization switcher)
   useEffect(() => {
@@ -258,6 +266,52 @@ export default function ArticlesPage() {
         setSelectedArticles([...selectedArticles, article])
       }
     }
+  }
+
+  // Bulk action handlers
+  const handleBulkAction = (action: 'publish' | 'translate' | 'export' | 'delete') => {
+    setBulkActionModal({
+      isOpen: true,
+      action
+    })
+  }
+
+  const handleBulkActionConfirm = async (action: string, articleIds: number[]) => {
+    try {
+      switch (action) {
+        case 'publish':
+          console.log('Publishing articles:', articleIds)
+          // TODO: Implement publish API call
+          break
+        case 'translate':
+          console.log('Translating articles:', articleIds)
+          // TODO: Implement translate API call
+          break
+        case 'export':
+          console.log('Exporting articles:', articleIds)
+          // TODO: Implement export API call
+          break
+        case 'delete':
+          console.log('Deleting articles:', articleIds)
+          // TODO: Implement delete API call
+          break
+        default:
+          console.warn('Unknown action:', action)
+      }
+      
+      // Clear selection after successful action
+      setSelectedArticles([])
+    } catch (error) {
+      console.error('Bulk action failed:', error)
+      throw error
+    }
+  }
+
+  const closeBulkActionModal = () => {
+    setBulkActionModal({
+      isOpen: false,
+      action: null
+    })
   }
 
   const renderNoArticlesMessage = () => {
@@ -587,10 +641,7 @@ export default function ArticlesPage() {
                               <div className="flex items-center gap-3">
                                 <Checkbox
                                   checked={selectedArticles.some((a) => a.id === article.id)}
-                                  onCheckedChange={(e) => {
-                                    e.stopPropagation()
-                                    toggleArticleSelection(article.id)
-                                  }}
+                                  onCheckedChange={() => toggleArticleSelection(article.id)}
                                 />
                                 <Link href={`/articles/edit/${article.id}`} className="flex-1">
                                 <div>
@@ -651,9 +702,25 @@ export default function ArticlesPage() {
           </>
         )}
 
-        <BottomActionBar selectedCount={selectedArticles.length} itemType="articles" />
+        <BottomActionBar 
+          selectedCount={selectedArticles.length} 
+          itemType="articles" 
+          selectedItems={selectedArticles}
+          onPublish={() => handleBulkAction('publish')}
+          onTranslate={() => handleBulkAction('translate')}
+          onExport={() => handleBulkAction('export')}
+          onDelete={() => handleBulkAction('delete')}
+        />
       </div>
     </div>
+    
+    <BulkActionModal
+      isOpen={bulkActionModal.isOpen}
+      onClose={closeBulkActionModal}
+      action={bulkActionModal.action}
+      selectedArticles={selectedArticles}
+      onConfirm={handleBulkActionConfirm}
+    />
     </>
   )
 }
