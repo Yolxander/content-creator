@@ -42,6 +42,8 @@ import {
   Trash2,
   ChevronRight,
   ChevronLeft,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
@@ -173,23 +175,12 @@ export default function NewArticlePage() {
   const [isLoadingCategories, setIsLoadingCategories] = useState(false)
   const [programs, setPrograms] = useState<Array<{id: number, name: string}>>([])
   const [isLoadingPrograms, setIsLoadingPrograms] = useState(false)
+  const [isStepsCollapsed, setIsStepsCollapsed] = useState(false)
   const { user } = useAuth()
 
-  // Load categories and programs on component mount
+  // Load programs on component mount
   useEffect(() => {
-    const loadData = async () => {
-      // Load categories
-      setIsLoadingCategories(true)
-      try {
-        const categoriesData = await getArticleCategoriesForDropdown()
-        setCategories(categoriesData)
-      } catch (error) {
-        console.error('Failed to load categories:', error)
-      } finally {
-        setIsLoadingCategories(false)
-      }
-
-      // Load programs from localStorage (same as articles page)
+    const loadPrograms = async () => {
       setIsLoadingPrograms(true)
       try {
         const storedPrograms = localStorage.getItem('currentOrganizationPrograms')
@@ -238,8 +229,45 @@ export default function NewArticlePage() {
       }
     }
 
-    loadData()
+    loadPrograms()
   }, [user?.organization])
+
+  // Load categories based on selected program
+  useEffect(() => {
+    const loadCategories = async () => {
+      if (contentForm.program_id) {
+        setIsLoadingCategories(true)
+        try {
+          const categoriesData = await getArticleCategoriesForDropdown(contentForm.program_id, 'en')
+          setCategories(categoriesData)
+          // Clear selected category when program changes
+          setContentForm(prev => ({ ...prev, category: "" }))
+        } catch (error) {
+          console.error('Failed to load categories:', error)
+          setCategories([])
+        } finally {
+          setIsLoadingCategories(false)
+        }
+      }
+    }
+
+    loadCategories()
+  }, [contentForm.program_id])
+
+  // Load steps collapsed state from localStorage
+  useEffect(() => {
+    const storedCollapsedState = localStorage.getItem('articleWizardStepsCollapsed')
+    if (storedCollapsedState !== null) {
+      setIsStepsCollapsed(JSON.parse(storedCollapsedState))
+    }
+  }, [])
+
+  // Save steps collapsed state to localStorage
+  const toggleStepsCollapsed = () => {
+    const newCollapsedState = !isStepsCollapsed
+    setIsStepsCollapsed(newCollapsedState)
+    localStorage.setItem('articleWizardStepsCollapsed', JSON.stringify(newCollapsedState))
+  }
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -801,21 +829,29 @@ export default function NewArticlePage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={toggleStepsCollapsed}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                {isStepsCollapsed ? (
+                  <>
+                    <ChevronDown className="w-4 h-4 mr-1" />
+                    Show Steps
+                  </>
+                ) : (
+                  <>
+                    <ChevronUp className="w-4 h-4 mr-1" />
+                    Hide Steps
+                  </>
+                )}
+              </Button>
               <Button variant="outline">
                 <Eye className="w-4 h-4 mr-2" />
                 Preview
               </Button>
-              <div className="flex items-center gap-1">
-                <Avatar className="w-6 h-6">
-                  <AvatarFallback className="text-xs">AR</AvatarFallback>
-                </Avatar>
-                <Avatar className="w-6 h-6">
-                  <AvatarFallback className="text-xs">MF</AvatarFallback>
-                </Avatar>
-              </div>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
+
               <Button variant="outline">
                 <Share className="w-4 h-4 mr-2" />
                 Share
@@ -841,49 +877,53 @@ export default function NewArticlePage() {
 
           {/* Steps */}
           <div className="mt-6">
-            <div className="flex items-center justify-between relative">
-              {/* Progress line */}
-              <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 -z-10" />
+            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
+              isStepsCollapsed ? 'max-h-0 opacity-0 mb-0' : 'max-h-40 opacity-100 mb-4'
+            }`}>
+              <div className="flex items-center justify-between relative">
+                {/* Progress line */}
+                <div className="absolute top-4 left-0 right-0 h-0.5 bg-gray-200 -z-10" />
 
-              {steps.map((step, index) => (
-                <div
-                  key={step.id}
-                  className="flex flex-col items-center relative"
-                >
-                  {/* Step circle */}
+                {steps.map((step, index) => (
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 transition-colors ${
-                      index === currentStep
-                        ? "bg-[#05AFF2] text-white ring-4 ring-[#05AFF2]/20"
-                        : index < currentStep
-                        ? "bg-gray-900 text-white"
-                        : "bg-gray-100 text-gray-500"
-                    }`}
+                    key={step.id}
+                    className="flex flex-col items-center relative"
                   >
-                    {index < currentStep ? (
-                      <CheckCircle className="w-4 h-4" />
-                    ) : (
-                      index + 1
-                    )}
-                  </div>
-                  
-                  {/* Step text */}
-                  <div className="text-center">
-                    <div className={`font-medium ${
-                      index === currentStep
-                        ? "text-[#05AFF2]"
-                        : index < currentStep
-                        ? "text-gray-900"
-                        : "text-gray-500"
-                    }`}>
-                      {step.title}
+                    {/* Step circle */}
+                    <div
+                      className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 transition-all duration-200 ${
+                        index === currentStep
+                          ? "bg-[#05AFF2] text-white ring-4 ring-[#05AFF2]/20 scale-110"
+                          : index < currentStep
+                          ? "bg-gray-900 text-white"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {index < currentStep ? (
+                        <CheckCircle className="w-4 h-4" />
+                      ) : (
+                        index + 1
+                      )}
                     </div>
-                    <div className="text-xs text-gray-500 mt-0.5">
-                      {step.description}
+                    
+                    {/* Step text */}
+                    <div className="text-center">
+                      <div className={`font-medium transition-colors duration-200 ${
+                        index === currentStep
+                          ? "text-[#05AFF2]"
+                          : index < currentStep
+                          ? "text-gray-900"
+                          : "text-gray-500"
+                      }`}>
+                        {step.title}
+                      </div>
+                      <div className="text-xs text-gray-500 mt-0.5">
+                        {step.description}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
         </div>
