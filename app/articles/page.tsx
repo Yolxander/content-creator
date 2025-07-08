@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -38,64 +38,23 @@ import {
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
 import { BottomActionBar } from "@/components/BottomActionBar"
+import { getArticles } from "@/actions/article-actions"
 
-const articles = [
-  {
-    id: 1,
-    title: "Building a Podcast Studio (for Marketers)",
-    author: "Adam Rogers",
-    category: "MARKETING",
-    status: "PUBLISHED",
-    views: "1,200",
-    languages: 3,
-    lastModified: "Sep 12, 2024",
-    selected: false,
-  },
-  {
-    id: 2,
-    title: "The Future of Content Marketing",
-    author: "Mike Fitzgerald",
-    category: "STRATEGY",
-    status: "IN_REVIEW",
-    views: "856",
-    languages: 2,
-    lastModified: "Sep 11, 2024",
-    selected: true,
-  },
-  {
-    id: 3,
-    title: "SEO Best Practices for 2024",
-    author: "Sarah Johnson",
-    category: "SEO",
-    status: "DRAFT",
-    views: "0",
-    languages: 1,
-    lastModified: "Sep 10, 2024",
-    selected: false,
-  },
-  {
-    id: 4,
-    title: "Video Marketing Strategies",
-    author: "Adam Rogers",
-    category: "VIDEO",
-    status: "PUBLISHED",
-    views: "2,100",
-    languages: 5,
-    lastModified: "Sep 9, 2024",
-    selected: true,
-  },
-  {
-    id: 5,
-    title: "Social Media Trends 2024",
-    author: "Emily Chen",
-    category: "SOCIAL",
-    status: "PENDING_APPROVAL",
-    views: "0",
-    languages: 2,
-    lastModified: "Sep 8, 2024",
-    selected: true,
-  },
-]
+// Interface for the article data structure
+interface Article {
+  id: number
+  title: string
+  author: string
+  category: string
+  status: string
+  views: string
+  languages: number
+  lastModified: string
+  selected: boolean
+}
+
+// Default empty articles array
+const defaultArticles: Article[] = []
 
 const getStatusColor = (status: string) => {
   switch (status) {
@@ -130,9 +89,119 @@ const getCategoryColor = (category: string) => {
 }
 
 export default function ArticlesPage() {
-  const [selectedArticles, setSelectedArticles] = useState(articles.filter((article) => article.selected))
+  const [articles, setArticles] = useState<Article[]>(defaultArticles)
+  const [selectedArticles, setSelectedArticles] = useState<Article[]>([])
   const [groupEnabled, setGroupEnabled] = useState(false)
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'timeline'>('list')
+  const [loading, setLoading] = useState(true)
+
+  // Fetch articles from the API
+  useEffect(() => {
+    console.log('ArticlesPage component mounted, fetching articles...')
+    
+    const fetchArticles = async () => {
+      try {
+        setLoading(true)
+        console.log('Making API call to fetch articles...')
+        
+        const response = await getArticles({
+          program_id: 58, // Default program ID
+          locale: 'en',
+          limit: 50,
+          offset: 0
+        })
+        
+        console.log('Articles API Response:', response)
+        
+        // Transform the API response to match our Article interface
+        if (response && response.data) {
+          const transformedArticles: Article[] = response.data.map((article: any, index: number) => ({
+            id: article.id || index + 1,
+            title: article.article_name || article.title || `Article ${index + 1}`,
+            author: article.author || article.article_author || 'Unknown Author',
+            category: article.category || 'GENERAL',
+            status: article.status || 'DRAFT',
+            views: article.views || '0',
+            languages: article.languages || 1,
+            lastModified: article.date || article.updated_at || article.created_at || new Date().toLocaleDateString(),
+            selected: false
+          }))
+          
+          setArticles(transformedArticles)
+          console.log('Transformed articles:', transformedArticles)
+          console.log('Articles loaded successfully!')
+        }
+      } catch (error) {
+        console.error('Error fetching articles:', error)
+        // Fallback to default articles if API fails
+        const fallbackArticles: Article[] = [
+          {
+            id: 1,
+            title: "Building a Podcast Studio (for Marketers)",
+            author: "Adam Rogers",
+            category: "MARKETING",
+            status: "PUBLISHED",
+            views: "1,200",
+            languages: 3,
+            lastModified: "Sep 12, 2024",
+            selected: false,
+          },
+          {
+            id: 2,
+            title: "The Future of Content Marketing",
+            author: "Mike Fitzgerald",
+            category: "STRATEGY",
+            status: "IN_REVIEW",
+            views: "856",
+            languages: 2,
+            lastModified: "Sep 11, 2024",
+            selected: true,
+          },
+          {
+            id: 3,
+            title: "SEO Best Practices for 2024",
+            author: "Sarah Johnson",
+            category: "SEO",
+            status: "DRAFT",
+            views: "0",
+            languages: 1,
+            lastModified: "Sep 10, 2024",
+            selected: false,
+          },
+          {
+            id: 4,
+            title: "Video Marketing Strategies",
+            author: "Adam Rogers",
+            category: "VIDEO",
+            status: "PUBLISHED",
+            views: "2,100",
+            languages: 5,
+            lastModified: "Sep 9, 2024",
+            selected: true,
+          },
+          {
+            id: 5,
+            title: "Social Media Trends 2024",
+            author: "Emily Chen",
+            category: "SOCIAL",
+            status: "PENDING_APPROVAL",
+            views: "0",
+            languages: 2,
+            lastModified: "Sep 8, 2024",
+            selected: true,
+          },
+        ]
+        setArticles(fallbackArticles)
+        setSelectedArticles(fallbackArticles.filter(article => article.selected))
+        console.log('Using fallback articles due to API error')
+              } finally {
+          setLoading(false)
+          console.log('Loading completed, loading state set to false')
+        }
+    }
+
+    fetchArticles()
+  }, [])
 
   const toggleArticleSelection = (articleId: number) => {
     const article = articles.find((a) => a.id === articleId)
@@ -301,6 +370,16 @@ export default function ArticlesPage() {
           {/*  </Card>*/}
           {/*</div>*/}
 
+          {/* Loading State */}
+          {loading && (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#05AFF2] mx-auto mb-2"></div>
+                <p className="text-gray-500">Loading articles...</p>
+              </div>
+            </div>
+          )}
+
           {/* Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -355,107 +434,111 @@ export default function ArticlesPage() {
         </div>
 
         {/* Content */}
-        {viewMode === 'timeline' ? (
-          renderTimelineView()
-        ) : (
-          <div className="flex-1 overflow-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <div className="flex items-center gap-2">
-                      <FileText className="w-4 h-4" />
-                      ARTICLE
-                    </div>
-                  </th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">AUTHOR</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">CATEGORY</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">VIEWS</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">LANGUAGES</th>
-                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    <div className="flex items-center gap-1">
-                      LAST MODIFIED
-                      <ChevronUp className="w-3 h-3" />
-                    </div>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {articles.map((article) => (
-                  <tr key={article.id} className="hover:bg-gray-50 group relative">
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={selectedArticles.some((a) => a.id === article.id)}
-                          onCheckedChange={(e) => {
-                            e.stopPropagation()
-                            toggleArticleSelection(article.id)
-                          }}
-                        />
-                        <Link href={`/articles/edit/${article.id}`} className="flex-1">
-                        <div>
-                          <div className="font-medium text-gray-900">{article.title}</div>
-                          <div className="text-sm text-gray-500">ID: {article.id}</div>
+        {!loading && (
+          <>
+            {viewMode === 'timeline' ? (
+              renderTimelineView()
+            ) : (
+              <div className="flex-1 overflow-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4" />
+                          ARTICLE
                         </div>
-                        </Link>
-                      </div>
-                    </td>
-                    <td className="p-4">
-                      <Link href={`/articles/edit/${article.id}`} className="block">
-                      <div className="flex items-center gap-2">
-                        <Avatar className="w-6 h-6">
-                          <AvatarFallback className="text-xs">
-                            {article.author
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="text-sm text-gray-900">{article.author}</span>
-                      </div>
-                      </Link>
-                    </td>
-                    <td className="p-4">
-                      <Link href={`/articles/edit/${article.id}`} className="block">
-                      <Badge variant="secondary" className={getCategoryColor(article.category)}>
-                        {article.category}
-                      </Badge>
-                      </Link>
-                    </td>
-                    <td className="p-4">
-                      <Link href={`/articles/edit/${article.id}`} className="block">
-                      <Badge variant="secondary" className={getStatusColor(article.status)}>
-                        {article.status.replace("_", " ")}
-                      </Badge>
-                      </Link>
-                    </td>
-                    <td className="p-4">
-                      <Link href={`/articles/edit/${article.id}`} className="block">
-                      <div className="flex items-center gap-1">
-                        <Eye className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{article.views}</span>
-                      </div>
-                      </Link>
-                    </td>
-                    <td className="p-4">
-                      <Link href={`/articles/edit/${article.id}`} className="block">
-                      <div className="flex items-center gap-1">
-                        <Globe className="w-4 h-4 text-gray-400" />
-                        <span className="text-sm text-gray-900">{article.languages}</span>
-                      </div>
-                      </Link>
-                    </td>
-                    <td className="p-4">
-                      <Link href={`/articles/edit/${article.id}`} className="block">
-                      <span className="text-sm text-gray-500">{article.lastModified}</span>
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      </th>
+                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">AUTHOR</th>
+                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">CATEGORY</th>
+                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
+                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">VIEWS</th>
+                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">LANGUAGES</th>
+                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <div className="flex items-center gap-1">
+                          LAST MODIFIED
+                          <ChevronUp className="w-3 h-3" />
+                        </div>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {articles.map((article) => (
+                      <tr key={article.id} className="hover:bg-gray-50 group relative">
+                        <td className="p-4">
+                          <div className="flex items-center gap-3">
+                            <Checkbox
+                              checked={selectedArticles.some((a) => a.id === article.id)}
+                              onCheckedChange={(e) => {
+                                e.stopPropagation()
+                                toggleArticleSelection(article.id)
+                              }}
+                            />
+                            <Link href={`/articles/edit/${article.id}`} className="flex-1">
+                            <div>
+                              <div className="font-medium text-gray-900">{article.title}</div>
+                              <div className="text-sm text-gray-500">ID: {article.id}</div>
+                            </div>
+                            </Link>
+                          </div>
+                        </td>
+                        <td className="p-4">
+                          <Link href={`/articles/edit/${article.id}`} className="block">
+                          <div className="flex items-center gap-2">
+                            <Avatar className="w-6 h-6">
+                              <AvatarFallback className="text-xs">
+                                {article.author
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")}
+                              </AvatarFallback>
+                            </Avatar>
+                            <span className="text-sm text-gray-900">{article.author}</span>
+                          </div>
+                          </Link>
+                        </td>
+                        <td className="p-4">
+                          <Link href={`/articles/edit/${article.id}`} className="block">
+                          <Badge variant="secondary" className={getCategoryColor(article.category)}>
+                            {article.category}
+                          </Badge>
+                          </Link>
+                        </td>
+                        <td className="p-4">
+                          <Link href={`/articles/edit/${article.id}`} className="block">
+                          <Badge variant="secondary" className={getStatusColor(article.status)}>
+                            {article.status.replace("_", " ")}
+                          </Badge>
+                          </Link>
+                        </td>
+                        <td className="p-4">
+                          <Link href={`/articles/edit/${article.id}`} className="block">
+                          <div className="flex items-center gap-1">
+                            <Eye className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-900">{article.views}</span>
+                          </div>
+                          </Link>
+                        </td>
+                        <td className="p-4">
+                          <Link href={`/articles/edit/${article.id}`} className="block">
+                          <div className="flex items-center gap-1">
+                            <Globe className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-900">{article.languages}</span>
+                          </div>
+                          </Link>
+                        </td>
+                        <td className="p-4">
+                          <Link href={`/articles/edit/${article.id}`} className="block">
+                          <span className="text-sm text-gray-500">{article.lastModified}</span>
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </>
         )}
 
         <BottomActionBar selectedCount={selectedArticles.length} itemType="articles" />
