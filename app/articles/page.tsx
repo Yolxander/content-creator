@@ -631,6 +631,30 @@ export default function ArticlesPage() {
     )
   }
 
+  // Control visibility state (persisted in localStorage)
+  const [showViewMode, setShowViewMode] = useState(true);
+  const [showGroupByCategory, setShowGroupByCategory] = useState(true);
+  const [showProgramSelect, setShowProgramSelect] = useState(true);
+
+  // Load visibility state from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('articleControlsVisibility');
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (typeof parsed.showViewMode === 'boolean') setShowViewMode(parsed.showViewMode);
+        if (typeof parsed.showGroupByCategory === 'boolean') setShowGroupByCategory(parsed.showGroupByCategory);
+        if (typeof parsed.showProgramSelect === 'boolean') setShowProgramSelect(parsed.showProgramSelect);
+      } catch {}
+    }
+  }, []);
+  // Save visibility state to localStorage on change
+  useEffect(() => {
+    localStorage.setItem('articleControlsVisibility', JSON.stringify({
+      showViewMode, showGroupByCategory, showProgramSelect
+    }));
+  }, [showViewMode, showGroupByCategory, showProgramSelect]);
+
   return (
     <>
       <style jsx>{`
@@ -667,127 +691,97 @@ export default function ArticlesPage() {
                     <MoreHorizontal className="w-4 h-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuItem>Export</DropdownMenuItem>
-                  <DropdownMenuItem>Import</DropdownMenuItem>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <div className="flex items-center gap-2 w-full cursor-pointer" onClick={e => e.stopPropagation()}>
+                      <Switch checked={showViewMode} onCheckedChange={setShowViewMode} />
+                      <span>Show View Mode</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <div className="flex items-center gap-2 w-full cursor-pointer" onClick={e => e.stopPropagation()}>
+                      <Switch checked={showGroupByCategory} onCheckedChange={setShowGroupByCategory} />
+                      <span>Show Group by Category</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <div className="flex items-center gap-2 w-full cursor-pointer" onClick={e => e.stopPropagation()}>
+                      <Switch checked={showProgramSelect} onCheckedChange={setShowProgramSelect} />
+                      <span>Show Program Select</span>
+                    </div>
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
 
-          {/*/!* Stats cards *!/*/}
-          {/*<div className="grid grid-cols-4 gap-6 mb-6">*/}
-          {/*  <Card>*/}
-          {/*    <CardContent className="p-4">*/}
-          {/*      <div className="text-sm text-gray-500 mb-1">Time Period</div>*/}
-          {/*      <DropdownMenu>*/}
-          {/*        <DropdownMenuTrigger asChild>*/}
-          {/*          <Button variant="ghost" size="sm" className="h-8">*/}
-          {/*            Last 7 days*/}
-          {/*            <ChevronDown className="w-4 h-4 ml-2" />*/}
-          {/*          </Button>*/}
-          {/*        </DropdownMenuTrigger>*/}
-          {/*        <DropdownMenuContent align="end">*/}
-          {/*          <DropdownMenuItem>Last 7 days</DropdownMenuItem>*/}
-          {/*          <DropdownMenuItem>Last 30 days</DropdownMenuItem>*/}
-          {/*          <DropdownMenuItem>Last 90 days</DropdownMenuItem>*/}
-          {/*        </DropdownMenuContent>*/}
-          {/*      </DropdownMenu>*/}
-          {/*    </CardContent>*/}
-          {/*  </Card>*/}
-          {/*  <Card>*/}
-          {/*    <CardContent className="p-4">*/}
-          {/*      <div className="text-sm text-gray-500 mb-1">Published</div>*/}
-          {/*      <div className="flex items-center gap-2">*/}
-          {/*        <div className="text-2xl font-semibold">156</div>*/}
-          {/*        <div className="flex items-center text-green-600 text-sm">*/}
-          {/*          <TrendingUp className="w-3 h-3 mr-1" />*/}
-          {/*          +12%*/}
-          {/*        </div>*/}
-          {/*      </div>*/}
-          {/*    </CardContent>*/}
-          {/*  </Card>*/}
-          {/*  <Card>*/}
-          {/*    <CardContent className="p-4">*/}
-          {/*      <div className="text-sm text-gray-500 mb-1">In Review</div>*/}
-          {/*      <div className="flex items-center gap-2">*/}
-          {/*        <div className="text-2xl font-semibold">42</div>*/}
-          {/*        <div className="flex items-center text-orange-600 text-sm">*/}
-          {/*          <ArrowUpRight className="w-3 h-3 mr-1" />*/}
-          {/*          +8%*/}
-          {/*        </div>*/}
-          {/*      </div>*/}
-          {/*    </CardContent>*/}
-          {/*  </Card>*/}
-          {/*  <Card>*/}
-          {/*    <CardContent className="p-4">*/}
-          {/*      <div className="text-sm text-gray-500 mb-1">Drafts</div>*/}
-          {/*      <div className="text-2xl font-semibold">23</div>*/}
-          {/*    </CardContent>*/}
-          {/*  </Card>*/}
-          {/*</div>*/}
 
           {/* Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={viewMode === 'list' ? "text-gray-900" : "text-gray-500"}
-                  onClick={() => setViewMode('list')}
-                >
-                  <List className="w-4 h-4 mr-2" />
-                  List
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={viewMode === 'grid' ? "text-gray-900" : "text-gray-500"}
-                  onClick={() => setViewMode('grid')}
-                >
-                  <Grid3X3 className="w-4 h-4 mr-2" />
-                  Grid
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className={viewMode === 'timeline' ? "text-gray-900" : "text-gray-500"}
-                  onClick={() => setViewMode('timeline')}
-                >
-                  <GitBranch className="w-4 h-4 mr-2" />
-                  Timeline
-                </Button>
-              </div>
-              <div className="flex items-center gap-2  mr-2">
-                <Switch
-                  checked={groupEnabled}
-                  onCheckedChange={setGroupEnabled}
-                  className="data-[state=checked]:bg-gray-900"
-                />
-                <span className="text-sm text-gray-600">Group by category</span>
-              </div>
-              <div className="flex items-center gap-2">
-
-                <Select
+              {showViewMode && (
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={viewMode === 'list' ? "text-gray-900" : "text-gray-500"}
+                    onClick={() => setViewMode('list')}
+                  >
+                    <List className="w-4 h-4 mr-2" />
+                    List
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={viewMode === 'grid' ? "text-gray-900" : "text-gray-500"}
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <Grid3X3 className="w-4 h-4 mr-2" />
+                    Grid
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className={viewMode === 'timeline' ? "text-gray-900" : "text-gray-500"}
+                    onClick={() => setViewMode('timeline')}
+                  >
+                    <GitBranch className="w-4 h-4 mr-2" />
+                    Timeline
+                  </Button>
+                </div>
+              )}
+              {showGroupByCategory && (
+                <div className="flex items-center gap-2  mr-2">
+                  <Switch
+                    checked={groupEnabled}
+                    onCheckedChange={setGroupEnabled}
+                    className="data-[state=checked]:bg-gray-900"
+                  />
+                  <span className="text-sm text-gray-600">Group by category</span>
+                </div>
+              )}
+              {showProgramSelect && (
+                <div className="flex items-center gap-2">
+                  <Select
                     value={selectedProgramId?.toString() || ""}
                     onValueChange={(value) => {
                       setSelectedProgramId(value ? parseInt(value) : null)
                     }}
-                >
-                  <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select program"/>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availablePrograms.map((program) => (
+                  >
+                    <SelectTrigger className="w-48">
+                      <SelectValue placeholder="Select program"/>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availablePrograms.map((program) => (
                         <SelectItem key={program.id} value={program.id.toString()}>
                           {program.name}
                         </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <span className="text-sm text-gray-600">Program</span>
-              </div >
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-gray-600">Program</span>
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-2">
               <div className="relative group w-72 focus-within:w-[350px] transition-all duration-300">
@@ -823,9 +817,33 @@ export default function ArticlesPage() {
                   </div>
                 )}
               </div>
-              <Button variant="ghost" size="icon">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem asChild>
+                    <div className="flex items-center gap-2 w-full cursor-pointer" onClick={e => e.stopPropagation()}>
+                      <Switch checked={showViewMode} onCheckedChange={setShowViewMode} />
+                      <span>Show View Mode</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <div className="flex items-center gap-2 w-full cursor-pointer" onClick={e => e.stopPropagation()}>
+                      <Switch checked={showGroupByCategory} onCheckedChange={setShowGroupByCategory} />
+                      <span>Show Group by Category</span>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <div className="flex items-center gap-2 w-full cursor-pointer" onClick={e => e.stopPropagation()}>
+                      <Switch checked={showProgramSelect} onCheckedChange={setShowProgramSelect} />
+                      <span>Show Program Select</span>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>
