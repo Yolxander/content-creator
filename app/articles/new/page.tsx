@@ -46,6 +46,7 @@ import {
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
 import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
 import { TranslationEditModal } from "@/components/TranslationEditModal"
 import { InitialTranslationModal } from "@/components/InitialTranslationModal"
 import { createArticleFromWizard, CreateArticleData, getArticleCategoriesForDropdown, ArticleCategory } from "@/actions/article-actions"
@@ -157,7 +158,12 @@ export default function NewArticlePage() {
   const [settingsForm, setSettingsForm] = useState({
     is_featured: false,
     program_id: 58,
-    is_show_track_articles_only: false
+    is_show_track_articles_only: false,
+    article_date_and_time: "",
+    start_date: "",
+    start_time: "",
+    end_date: "",
+    end_time: ""
   })
   
   const [translations, setTranslations] = useState<Record<string, ArticleCreatorTranslation>>({})
@@ -252,11 +258,11 @@ export default function NewArticlePage() {
       article_category_id: parseInt(contentForm.category) || 1,
       program_id: settingsForm.program_id,
       article_author: contentForm.author,
-      article_date_and_time: now,
-      start_date: null,
-      start_time: null,
-      end_date: null,
-      end_time: null,
+      article_date_and_time: settingsForm.article_date_and_time || now,
+      start_date: settingsForm.start_date || null,
+      start_time: settingsForm.start_time || null,
+      end_date: settingsForm.end_date || null,
+      end_time: settingsForm.end_time || null,
       is_featured: settingsForm.is_featured ? 1 : 0,
       created_at: now,
       updated_at: now
@@ -572,40 +578,110 @@ export default function NewArticlePage() {
             <CardHeader>
               <CardTitle>Article Settings</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">Featured Article</span>
+            <CardContent className="space-y-6">
+              {/* Date and Time Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Publishing Schedule</h3>
+                
+                <div>
+                  <Label htmlFor="article_date_and_time">Article Date and Time</Label>
+                  <Input 
+                    id="article_date_and_time"
+                    type="datetime-local"
+                    value={settingsForm.article_date_and_time}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, article_date_and_time: e.target.value }))}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">When the article should be published</p>
                 </div>
-                <Switch 
-                  checked={settingsForm.is_featured} 
-                  onCheckedChange={(checked) => setSettingsForm(prev => ({ ...prev, is_featured: checked }))} 
-                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="start_date">Start Date</Label>
+                    <Input 
+                      id="start_date"
+                      type="date"
+                      value={settingsForm.start_date}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, start_date: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="start_time">Start Time</Label>
+                    <Input 
+                      id="start_time"
+                      type="time"
+                      value={settingsForm.start_time}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, start_time: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="end_date">End Date</Label>
+                    <Input 
+                      id="end_date"
+                      type="date"
+                      value={settingsForm.end_date}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, end_date: e.target.value }))}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="end_time">End Time</Label>
+                                         <Input 
+                       id="end_time"
+                       type="time"
+                       value={settingsForm.end_time}
+                       onChange={(e) => setSettingsForm(prev => ({ ...prev, end_time: e.target.value }))}
+                       className="mt-1"
+                     />
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">Enable Comments</span>
+
+              <Separator />
+
+              {/* Other Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Article Options</h3>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium">Featured Article</span>
+                  </div>
+                  <Switch 
+                    checked={settingsForm.is_featured} 
+                    onCheckedChange={(checked) => setSettingsForm(prev => ({ ...prev, is_featured: checked }))} 
+                  />
                 </div>
-                <Switch checked={enableComments} onCheckedChange={setEnableComments} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">SEO Optimization</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium">Enable Comments</span>
+                  </div>
+                  <Switch checked={enableComments} onCheckedChange={setEnableComments} />
                 </div>
-                <Switch defaultChecked />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Lock className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">Show Track Articles Only</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium">SEO Optimization</span>
+                  </div>
+                  <Switch defaultChecked />
                 </div>
-                <Switch 
-                  checked={settingsForm.is_show_track_articles_only} 
-                  onCheckedChange={(checked) => setSettingsForm(prev => ({ ...prev, is_show_track_articles_only: checked }))} 
-                />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium">Show Track Articles Only</span>
+                  </div>
+                  <Switch 
+                    checked={settingsForm.is_show_track_articles_only} 
+                    onCheckedChange={(checked) => setSettingsForm(prev => ({ ...prev, is_show_track_articles_only: checked }))} 
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
