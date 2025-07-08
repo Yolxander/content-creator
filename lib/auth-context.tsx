@@ -234,14 +234,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         return { error: null }
       } else {
-        const message = data?.message || "Login failed"
-        console.error("Sign-in error:", message, data)
-        throw new Error(message)
+        // Handle validation errors
+        if (data && !data.success && data.message) {
+          // Extract error messages from the message array
+          let errorMessage = "Login failed"
+          if (Array.isArray(data.message)) {
+            // Handle array of validation errors
+            const errorMessages = data.message.map((error: any) => {
+              const field = Object.keys(error)[0]
+              const message = error[field]
+              
+              // Provide user-friendly messages for specific errors
+              if (field === 'email' && message.includes('awaiting approval')) {
+                return 'Your account is pending approval. Please wait for admin approval before signing in.'
+              }
+              if (field === 'email' && message.includes('not found')) {
+                return 'Email address not found. Please check your email or create a new account.'
+              }
+              if (field === 'password') {
+                return 'Incorrect password. Please try again.'
+              }
+              
+              return message
+            }).join(', ')
+            errorMessage = errorMessages
+          } else if (typeof data.message === 'string') {
+            // Handle single error message
+            errorMessage = data.message
+          }
+          throw new Error(errorMessage)
+        } else {
+          const message = data?.message || "Login failed"
+          console.error("Sign-in error:", message, data)
+          throw new Error(message)
+        }
       }
     } catch (error: any) {
-      console.error("Sign-in error:", error)
-      setError(error.message)
-      return { error }
+      let displayMessage = "Login failed";
+      try {
+        if (error.message && error.message.startsWith("{")) {
+          const errObj = JSON.parse(error.message);
+          if (errObj.message && Array.isArray(errObj.message)) {
+            const firstError = errObj.message[0];
+            const field = Object.keys(firstError)[0];
+            const msg = firstError[field];
+            if (field === 'email' && msg.includes('awaiting approval')) {
+              displayMessage = 'Your account is pending approval. Please wait for admin approval before signing in.';
+            } else if (field === 'email' && msg.includes('not found')) {
+              displayMessage = 'Email address not found. Please check your email or create a new account.';
+            } else if (field === 'password') {
+              displayMessage = 'Incorrect password. Please try again.';
+            } else {
+              displayMessage = msg;
+            }
+          } else if (typeof errObj.message === "string") {
+            displayMessage = errObj.message;
+          }
+        } else if (error.message) {
+          displayMessage = error.message;
+        }
+      } catch {
+        displayMessage = error.message || "Login failed";
+      }
+      setError(displayMessage);
+      return { error: { message: displayMessage } };
     } finally {
       setLoading(false)
     }
@@ -280,7 +336,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Handle array of validation errors
             const errorMessages = data.message.map((error: any) => {
               const field = Object.keys(error)[0]
-              return error[field]
+              const message = error[field]
+              
+              // Provide user-friendly messages for specific registration errors
+              if (field === 'email' && message.includes('already been taken')) {
+                return 'This email address is already registered. Please try signing in instead.'
+              }
+              if (field === 'email' && message.includes('invalid')) {
+                return 'Please enter a valid email address.'
+              }
+              if (field === 'password' && message.includes('confirmation')) {
+                return 'Password confirmation does not match.'
+              }
+              if (field === 'password' && message.includes('minimum')) {
+                return 'Password must be at least 6 characters long.'
+              }
+              if (field === 'first_name' || field === 'last_name') {
+                return 'Please enter your full name.'
+              }
+              if (field === 'terms') {
+                return 'Please accept the terms and conditions.'
+              }
+              
+              return message
             }).join(', ')
             errorMessage = errorMessages
           } else if (typeof data.message === 'string') {
