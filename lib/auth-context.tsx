@@ -121,12 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       config.body = JSON.stringify(body)
     }
 
-    console.log('Making API request to:', url)
-    console.log('Auth token available:', !!authToken)
-    console.log('Request headers:', config.headers)
-    if (body) {
-      console.log('Request body:', body)
-    }
+
 
     try {
       const response = await fetch(url, config)
@@ -143,7 +138,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
 
       const data = await response.json()
-      console.log('API Response:', data)
       return data
     } catch (error: any) {
       console.error("API Request Error:", error)
@@ -165,7 +159,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           // If we have the full auth response stored, use it to ensure we have complete data
           if (storedFullAuthResponse) {
             const fullAuthResponse = JSON.parse(storedFullAuthResponse)
-            console.log('Loading full auth response from localStorage:', fullAuthResponse)
             
             // Update user with complete data from full auth response
             const completeUser = {
@@ -228,9 +221,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const data = await apiRequest("/auth/login", "POST", requestBody)
 
       if (data && data.success && data.data && data.data.token) {
-        console.log('Auth token received:', data.data.token)
-        console.log('Full auth response:', data)
-        console.log('Profile data in response:', data.data.profile)
         
         const user = {
           id: data.data.firebase_uuid || '1', // Use firebase_uuid as id
@@ -254,19 +244,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Also set token in cookie for middleware
         document.cookie = `authToken=${data.data.token}; path=/; max-age=${60 * 60 * 24 * 7}` // 7 days
         
-        // Log the stored token for debugging
+        // Store token and user data
         const storedToken = localStorage.getItem('authToken')
-        console.log('Auth token stored in localStorage:', storedToken)
-        console.log('Token length:', storedToken?.length)
-        console.log('User object saved to localStorage:', user)
 
         // Redirect based on profile status
-        console.log('User profile status:', user.profile)
         if (user.profile) {
-          console.log('User has profile, redirecting to home')
           router.push("/")
         } else {
-          console.log('User has no profile, redirecting to onboarding')
           router.push("/onboarding")
         }
 
@@ -362,8 +346,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       })
 
       if (data && data.success) {
-        console.log('Registration successful:', data.message)
-        
         // For successful registration, we don't get a token immediately
         // The user needs to wait for approval, so we don't set user state
         // Just show success message and redirect to login
@@ -424,7 +406,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const token = localStorage.getItem("authToken")
       if (token) {
-        console.log('Logging out with token:', token)
         // Call the v3 API logout endpoint
         await apiRequest("/api/v3/auth/logout", "POST", {
           organization_id: 2

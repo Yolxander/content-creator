@@ -142,26 +142,16 @@ async function apiCall<T>(
   }
 
   try {
-    console.log('Making API request to:', url)
-    console.log('Auth token available:', requiresAuth ? !!localStorage.getItem('authToken') : 'N/A')
-    console.log('Request headers:', config.headers)
-    if (data) {
-      console.log('Request body:', data)
-    }
-
     const response = await fetch(url, config)
     
     if (!response.ok) {
       const errorText = await response.text()
-      console.error(`API call failed: Status: ${response.status}, Response: ${errorText}`)
       throw new Error(`API call failed: ${response.status} ${response.statusText}`)
     }
 
     const result = await response.json()
-    console.log('API Response:', result)
     return result
   } catch (error) {
-    console.error('API call error:', error)
     throw error
   }
 }
@@ -239,10 +229,8 @@ export async function updateArticleSettings(data: UpdateArticleSettingsData) {
 export async function createArticleFromWizard(wizardData: CreateArticleData) {
   try {
     const result = await createArticle(wizardData)
-    console.log('Article created successfully:', result)
     return result
   } catch (error) {
-    console.error('Failed to create article:', error)
     throw error
   }
 }
@@ -265,7 +253,6 @@ export async function getProgramArticles(
     })
     return result
   } catch (error) {
-    console.error('Failed to get program articles:', error)
     throw error
   }
 }
@@ -281,7 +268,6 @@ export async function getArticleDetails(articleId: number, locale: string = 'en'
     })
     return result
   } catch (error) {
-    console.error('Failed to get article details:', error)
     throw error
   }
 }
@@ -300,10 +286,8 @@ export async function updateArticleContent(
       article_creators: [articleData],
       article_creator_translation: translations
     })
-    console.log('Article updated successfully:', result)
     return result
   } catch (error) {
-    console.error('Failed to update article:', error)
     throw error
   }
 }
@@ -314,10 +298,8 @@ export async function updateArticleContent(
 export async function deleteArticleAndRelated(articleId: number) {
   try {
     const result = await deleteArticle(articleId)
-    console.log('Article deleted successfully:', result)
     return result
   } catch (error) {
-    console.error('Failed to delete article:', error)
     throw error
   }
 }
@@ -336,7 +318,6 @@ export async function getOrCreateArticleSettings(
     })
     return result
   } catch (error) {
-    console.error('Failed to get article settings:', error)
     throw error
   }
 }

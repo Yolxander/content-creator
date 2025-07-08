@@ -100,41 +100,115 @@ export default function ArticlesPage() {
   const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null)
   const [availablePrograms, setAvailablePrograms] = useState<Array<{id: number, name: string}>>([])
 
-  // Debug logging for user data and load programs
+  // Load programs from localStorage (from organization switcher)
   useEffect(() => {
-    console.log('ArticlesPage - User data:', user)
-    console.log('ArticlesPage - User programs:', user?.programs)
-    console.log('ArticlesPage - User organization:', user?.organization)
-    
-    // Set available programs from user context or localStorage
-    if (user?.programs && user.programs.length > 0) {
-      setAvailablePrograms(user.programs)
-      console.log('ArticlesPage - Set programs from user context:', user.programs)
-    } else if (typeof window !== 'undefined') {
-      // Fallback: Load programs from localStorage if not available in user context
-      const fullAuthResponse = localStorage.getItem('fullAuthResponse')
-      if (fullAuthResponse) {
-        try {
-          const authData = JSON.parse(fullAuthResponse)
-          if (authData.data.programs && authData.data.programs.length > 0) {
-            setAvailablePrograms(authData.data.programs)
-            console.log('ArticlesPage - Set programs from localStorage:', authData.data.programs)
-          }
-        } catch (error) {
-          console.error('Error parsing fullAuthResponse:', error)
+    const storedPrograms = localStorage.getItem('currentOrganizationPrograms')
+    if (storedPrograms) {
+      try {
+        const parsedPrograms = JSON.parse(storedPrograms)
+        
+        // Transform programs to match the expected format for the dropdown
+        const transformedPrograms = parsedPrograms.map((program: any) => ({
+          id: program.program_id,
+          name: program.name // Use name instead of title to avoid HTML content
+        }))
+        
+        setAvailablePrograms(transformedPrograms)
+        
+        // Set the first program as default selected if no program is currently selected
+        if (transformedPrograms.length > 0 && !selectedProgramId) {
+          setSelectedProgramId(transformedPrograms[0].id)
         }
+      } catch (error) {
+        setAvailablePrograms([])
       }
+    } else {
+      setAvailablePrograms([])
     }
   }, [user])
 
-  // Fetch articles from the API
+  // Fetch programs for current organization if not already stored
   useEffect(() => {
-    console.log('ArticlesPage component mounted, fetching articles...')
+    if (user?.organization && availablePrograms.length === 0) {
+      const storedPrograms = localStorage.getItem('currentOrganizationPrograms')
+      if (!storedPrograms) {
+        // Fetch programs for current organization
+        fetchProgramsForCurrentOrganization()
+      }
+    }
+  }, [user, availablePrograms.length])
+
+  // Listen for localStorage changes (when organization is switched)
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'currentOrganizationPrograms') {
+        // Reload programs from localStorage
+        const storedPrograms = localStorage.getItem('currentOrganizationPrograms')
+        if (storedPrograms) {
+          try {
+            const parsedPrograms = JSON.parse(storedPrograms)
+            const transformedPrograms = parsedPrograms.map((program: any) => ({
+              id: program.program_id,
+              name: program.name // Use name instead of title to avoid HTML content
+            }))
+            setAvailablePrograms(transformedPrograms)
+            
+            // Set the first program as default selected if no program is currently selected
+            if (transformedPrograms.length > 0 && !selectedProgramId) {
+              setSelectedProgramId(transformedPrograms[0].id)
+            }
+          } catch (error) {
+            // Handle error silently
+          }
+        }
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    return () => window.removeEventListener('storage', handleStorageChange)
+  }, [])
+
+  // Helper function to fetch programs for current organization
+  const fetchProgramsForCurrentOrganization = async () => {
+    if (!user?.organization) return
     
+    try {
+      const { fetchUserOrganizationProgramsSafe } = await import('@/actions/program-actions')
+      
+      const { success, data: programs, error } = await fetchUserOrganizationProgramsSafe({
+        locale: 'en',
+        organization_id: user.organization.id
+      })
+      
+      if (success && programs.length > 0) {
+        // Store programs in localStorage
+        localStorage.setItem('currentOrganizationPrograms', JSON.stringify(programs))
+        
+        // Transform and set programs for dropdown
+        const transformedPrograms = programs.map((program: any) => ({
+          id: program.program_id,
+          name: program.name // Use name instead of title to avoid HTML content
+        }))
+        
+        setAvailablePrograms(transformedPrograms)
+        
+        // Set the first program as default selected if no program is currently selected
+        if (transformedPrograms.length > 0 && !selectedProgramId) {
+          setSelectedProgramId(transformedPrograms[0].id)
+        }
+      } else {
+        setAvailablePrograms([])
+      }
+    } catch (error) {
+      setAvailablePrograms([])
+    }
+  }
+
+    // Fetch articles from the API
+  useEffect(() => {
     const fetchArticles = async () => {
       try {
         setLoading(true)
-        console.log('Making API call to fetch articles...')
         
         const response = await getArticles({
           program_id: selectedProgramId || user?.organization?.default_program_id || 58, // Use selected program or default
@@ -142,8 +216,6 @@ export default function ArticlesPage() {
           limit: 50,
           offset: 0
         })
-        
-        console.log('Articles API Response:', response)
         
         // Transform the API response to match our Article interface
         if (response && response.data && response.data.length > 0) {
@@ -160,24 +232,18 @@ export default function ArticlesPage() {
           }))
           
           setArticles(transformedArticles)
-          console.log('Transformed articles:', transformedArticles)
-          console.log('Articles loaded successfully!')
         } else {
           // No articles found for this program
           setArticles([])
           setSelectedArticles([])
-          console.log('No articles found for the selected program')
         }
-            } catch (error) {
-        console.error('Error fetching articles:', error)
+      } catch (error) {
         // Set empty articles array to show no articles message
         setArticles([])
         setSelectedArticles([])
-        console.log('No articles found or API error occurred')
       } finally {
-          setLoading(false)
-          console.log('Loading completed, loading state set to false')
-        }
+        setLoading(false)
+      }
     }
 
     fetchArticles()
@@ -433,9 +499,8 @@ export default function ArticlesPage() {
               <div className="flex items-center gap-2">
                 <span className="text-sm text-gray-600">Program:</span>
                 <Select
-                  value={selectedProgramId?.toString() || user?.organization?.default_program_id?.toString() || ""}
+                  value={selectedProgramId?.toString() || ""}
                   onValueChange={(value) => {
-                    console.log('Program filter changed to:', value)
                     setSelectedProgramId(value ? parseInt(value) : null)
                   }}
                 >
@@ -443,7 +508,6 @@ export default function ArticlesPage() {
                     <SelectValue placeholder="Select program" />
                   </SelectTrigger>
                   <SelectContent>
-                    {console.log('Rendering program filter with programs:', availablePrograms)}
                     {availablePrograms.map((program) => (
                       <SelectItem key={program.id} value={program.id.toString()}>
                         {program.name}
