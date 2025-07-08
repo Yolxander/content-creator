@@ -364,8 +364,21 @@ export default function ArticlesPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
-      <Sidebar />
+    <>
+      <style jsx>{`
+        @keyframes fadeInUp {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+      `}</style>
+      <div className="flex h-screen bg-gray-50">
+        <Sidebar />
 
       {/* Main content */}
       <div className="flex-1 flex flex-col">
@@ -446,16 +459,6 @@ export default function ArticlesPage() {
           {/*  </Card>*/}
           {/*</div>*/}
 
-          {/* Loading State */}
-          {loading && (
-            <div className="flex items-center justify-center py-8">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#05AFF2] mx-auto mb-2"></div>
-                <p className="text-gray-500">Loading articles...</p>
-              </div>
-            </div>
-          )}
-
           {/* Controls */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -488,7 +491,7 @@ export default function ArticlesPage() {
                   Timeline
                 </Button>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2  mr-2">
                 <Switch
                   checked={groupEnabled}
                   onCheckedChange={setGroupEnabled}
@@ -497,25 +500,26 @@ export default function ArticlesPage() {
                 <span className="text-sm text-gray-600">Group by category</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">Program:</span>
+
                 <Select
-                  value={selectedProgramId?.toString() || ""}
-                  onValueChange={(value) => {
-                    setSelectedProgramId(value ? parseInt(value) : null)
-                  }}
+                    value={selectedProgramId?.toString() || ""}
+                    onValueChange={(value) => {
+                      setSelectedProgramId(value ? parseInt(value) : null)
+                    }}
                 >
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Select program" />
+                    <SelectValue placeholder="Select program"/>
                   </SelectTrigger>
                   <SelectContent>
                     {availablePrograms.map((program) => (
-                      <SelectItem key={program.id} value={program.id.toString()}>
-                        {program.name}
-                      </SelectItem>
+                        <SelectItem key={program.id} value={program.id.toString()}>
+                          {program.name}
+                        </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+                <span className="text-sm text-gray-600">Program</span>
+              </div >
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -530,7 +534,14 @@ export default function ArticlesPage() {
         </div>
 
         {/* Content */}
-        {!loading && (
+        {loading ? (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#05AFF2] mx-auto mb-2"></div>
+              <p className="text-gray-500">Loading articles...</p>
+            </div>
+          </div>
+        ) : (
           <>
             {articles.length === 0 ? (
               renderNoArticlesMessage()
@@ -563,8 +574,15 @@ export default function ArticlesPage() {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {articles.map((article) => (
-                          <tr key={article.id} className="hover:bg-gray-50 group relative">
+                        {articles.map((article, index) => (
+                          <tr 
+                            key={article.id} 
+                            className="hover:bg-gray-50 group relative transition-all duration-300 ease-in-out"
+                            style={{
+                              animationDelay: `${index * 50}ms`,
+                              animation: 'fadeInUp 0.5s ease-out forwards'
+                            }}
+                          >
                             <td className="p-4">
                               <div className="flex items-center gap-3">
                                 <Checkbox
@@ -584,17 +602,7 @@ export default function ArticlesPage() {
                             </td>
                             <td className="p-4">
                               <Link href={`/articles/edit/${article.id}`} className="block">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="w-6 h-6">
-                                  <AvatarFallback className="text-xs">
-                                    {article.author
-                                      .split(" ")
-                                      .map((n) => n[0])
-                                      .join("")}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <span className="text-sm text-gray-900">{article.author}</span>
-                              </div>
+                              <span className="text-sm text-gray-900">{article.author}</span>
                               </Link>
                             </td>
                             <td className="p-4">
@@ -621,7 +629,7 @@ export default function ArticlesPage() {
                             </td>
                             <td className="p-4">
                               <Link href={`/articles/edit/${article.id}`} className="block">
-                              <div className="flex items-center gap-1">
+                              <div className="flex items-center gap-2">
                                 <Globe className="w-4 h-4 text-gray-400" />
                                 <span className="text-sm text-gray-900">{article.languages}</span>
                               </div>
@@ -646,5 +654,6 @@ export default function ArticlesPage() {
         <BottomActionBar selectedCount={selectedArticles.length} itemType="articles" />
       </div>
     </div>
+    </>
   )
 }
