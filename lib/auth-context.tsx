@@ -21,6 +21,18 @@ type Profile = {
   updated_at: string
 }
 
+type Organization = {
+  id: number
+  name: string
+  dashboard_url: string
+  default_program_id: number
+}
+
+type Program = {
+  id: number
+  name: string
+}
+
 type User = {
   id: string
   email?: string
@@ -30,6 +42,8 @@ type User = {
   firebase_uuid?: string
   roles?: string[]
   is_notifications?: boolean
+  organization?: Organization
+  programs?: Program[]
 }
 
 type AuthContextType = {
@@ -141,12 +155,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const storedUser = localStorage.getItem("user")
     const storedToken = localStorage.getItem("authToken")
+    const storedFullAuthResponse = localStorage.getItem("fullAuthResponse")
 
     async function initializeAuth() {
       if (storedUser && storedToken) {
         try {
           const parsedUser = JSON.parse(storedUser)
-          setUser(parsedUser)
+          
+          // If we have the full auth response stored, use it to ensure we have complete data
+          if (storedFullAuthResponse) {
+            const fullAuthResponse = JSON.parse(storedFullAuthResponse)
+            console.log('Loading full auth response from localStorage:', fullAuthResponse)
+            
+            // Update user with complete data from full auth response
+            const completeUser = {
+              ...parsedUser,
+              organization: fullAuthResponse.data.organization || parsedUser.organization,
+              programs: fullAuthResponse.data.programs || parsedUser.programs
+            }
+            
+            setUser(completeUser)
+            // Update localStorage with complete user data
+            localStorage.setItem("user", JSON.stringify(completeUser))
+          } else {
+            setUser(parsedUser)
+          }
 
           // Check if we need to redirect based on profile status
           const currentPath = pathname
@@ -207,8 +240,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           firebase_uuid: data.data.firebase_uuid,
           roles: data.data.roles,
           is_notifications: data.data.is_notifications,
-          profile: data.data.profile || null // Use profile from response if available
+          profile: data.data.profile || null, // Use profile from response if available
+          organization: data.data.organization || null,
+          programs: data.data.programs || []
         }
+        
+        // Store the full auth response for debugging and reference
+        localStorage.setItem("fullAuthResponse", JSON.stringify(data))
         setUser(user)
         localStorage.setItem("user", JSON.stringify(user))
         localStorage.setItem("authToken", data.data.token)

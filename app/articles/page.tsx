@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   Calendar,
   ChevronDown,
@@ -39,6 +40,7 @@ import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
 import { BottomActionBar } from "@/components/BottomActionBar"
 import { getArticles } from "@/actions/article-actions"
+import { useAuth } from "@/lib/auth-context"
 
 // Interface for the article data structure
 interface Article {
@@ -89,11 +91,41 @@ const getCategoryColor = (category: string) => {
 }
 
 export default function ArticlesPage() {
+  const { user } = useAuth()
   const [articles, setArticles] = useState<Article[]>(defaultArticles)
   const [selectedArticles, setSelectedArticles] = useState<Article[]>([])
   const [groupEnabled, setGroupEnabled] = useState(false)
   const [viewMode, setViewMode] = useState<'list' | 'grid' | 'timeline'>('list')
   const [loading, setLoading] = useState(true)
+  const [selectedProgramId, setSelectedProgramId] = useState<number | null>(null)
+  const [availablePrograms, setAvailablePrograms] = useState<Array<{id: number, name: string}>>([])
+
+  // Debug logging for user data and load programs
+  useEffect(() => {
+    console.log('ArticlesPage - User data:', user)
+    console.log('ArticlesPage - User programs:', user?.programs)
+    console.log('ArticlesPage - User organization:', user?.organization)
+    
+    // Set available programs from user context or localStorage
+    if (user?.programs && user.programs.length > 0) {
+      setAvailablePrograms(user.programs)
+      console.log('ArticlesPage - Set programs from user context:', user.programs)
+    } else if (typeof window !== 'undefined') {
+      // Fallback: Load programs from localStorage if not available in user context
+      const fullAuthResponse = localStorage.getItem('fullAuthResponse')
+      if (fullAuthResponse) {
+        try {
+          const authData = JSON.parse(fullAuthResponse)
+          if (authData.data.programs && authData.data.programs.length > 0) {
+            setAvailablePrograms(authData.data.programs)
+            console.log('ArticlesPage - Set programs from localStorage:', authData.data.programs)
+          }
+        } catch (error) {
+          console.error('Error parsing fullAuthResponse:', error)
+        }
+      }
+    }
+  }, [user])
 
   // Fetch articles from the API
   useEffect(() => {
@@ -105,7 +137,7 @@ export default function ArticlesPage() {
         console.log('Making API call to fetch articles...')
         
         const response = await getArticles({
-          program_id: 58, // Default program ID
+          program_id: selectedProgramId || user?.organization?.default_program_id || 58, // Use selected program or default
           locale: 'en',
           limit: 50,
           offset: 0
@@ -114,7 +146,7 @@ export default function ArticlesPage() {
         console.log('Articles API Response:', response)
         
         // Transform the API response to match our Article interface
-        if (response && response.data) {
+        if (response && response.data && response.data.length > 0) {
           const transformedArticles: Article[] = response.data.map((article: any, index: number) => ({
             id: article.id || index + 1,
             title: article.article_name || article.title || `Article ${index + 1}`,
@@ -130,78 +162,26 @@ export default function ArticlesPage() {
           setArticles(transformedArticles)
           console.log('Transformed articles:', transformedArticles)
           console.log('Articles loaded successfully!')
+        } else {
+          // No articles found for this program
+          setArticles([])
+          setSelectedArticles([])
+          console.log('No articles found for the selected program')
         }
-      } catch (error) {
+            } catch (error) {
         console.error('Error fetching articles:', error)
-        // Fallback to default articles if API fails
-        const fallbackArticles: Article[] = [
-          {
-            id: 1,
-            title: "Building a Podcast Studio (for Marketers)",
-            author: "Adam Rogers",
-            category: "MARKETING",
-            status: "PUBLISHED",
-            views: "1,200",
-            languages: 3,
-            lastModified: "Sep 12, 2024",
-            selected: false,
-          },
-          {
-            id: 2,
-            title: "The Future of Content Marketing",
-            author: "Mike Fitzgerald",
-            category: "STRATEGY",
-            status: "IN_REVIEW",
-            views: "856",
-            languages: 2,
-            lastModified: "Sep 11, 2024",
-            selected: true,
-          },
-          {
-            id: 3,
-            title: "SEO Best Practices for 2024",
-            author: "Sarah Johnson",
-            category: "SEO",
-            status: "DRAFT",
-            views: "0",
-            languages: 1,
-            lastModified: "Sep 10, 2024",
-            selected: false,
-          },
-          {
-            id: 4,
-            title: "Video Marketing Strategies",
-            author: "Adam Rogers",
-            category: "VIDEO",
-            status: "PUBLISHED",
-            views: "2,100",
-            languages: 5,
-            lastModified: "Sep 9, 2024",
-            selected: true,
-          },
-          {
-            id: 5,
-            title: "Social Media Trends 2024",
-            author: "Emily Chen",
-            category: "SOCIAL",
-            status: "PENDING_APPROVAL",
-            views: "0",
-            languages: 2,
-            lastModified: "Sep 8, 2024",
-            selected: true,
-          },
-        ]
-        setArticles(fallbackArticles)
-        setSelectedArticles(fallbackArticles.filter(article => article.selected))
-        console.log('Using fallback articles due to API error')
-              } finally {
+        // Set empty articles array to show no articles message
+        setArticles([])
+        setSelectedArticles([])
+        console.log('No articles found or API error occurred')
+      } finally {
           setLoading(false)
           console.log('Loading completed, loading state set to false')
         }
     }
 
     fetchArticles()
-  }, [])
+  }, [selectedProgramId, user?.organization?.default_program_id])
 
   const toggleArticleSelection = (articleId: number) => {
     const article = articles.find((a) => a.id === articleId)
@@ -212,6 +192,36 @@ export default function ArticlesPage() {
         setSelectedArticles([...selectedArticles, article])
       }
     }
+  }
+
+  const renderNoArticlesMessage = () => {
+    const selectedProgram = availablePrograms.find(p => p.id === selectedProgramId) || 
+                           availablePrograms.find(p => p.id === user?.organization?.default_program_id)
+    
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto p-8">
+          <div className="mb-6">
+            <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              No articles found
+            </h3>
+            <p className="text-gray-500 mb-6">
+              {selectedProgram 
+                ? `There are no articles in the "${selectedProgram.name}" program yet.`
+                : "There are no articles for this program yet."
+              }
+            </p>
+          </div>
+          <Link href="/articles/new">
+            <Button className="bg-[#05AFF2] hover:bg-[#05AFF2]/90">
+              <Plus className="w-4 h-4 mr-2" />
+              Create your first article
+            </Button>
+          </Link>
+        </div>
+      </div>
+    )
   }
 
   const renderTimelineView = () => {
@@ -420,6 +430,28 @@ export default function ArticlesPage() {
                 />
                 <span className="text-sm text-gray-600">Group by category</span>
               </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-600">Program:</span>
+                <Select
+                  value={selectedProgramId?.toString() || user?.organization?.default_program_id?.toString() || ""}
+                  onValueChange={(value) => {
+                    console.log('Program filter changed to:', value)
+                    setSelectedProgramId(value ? parseInt(value) : null)
+                  }}
+                >
+                  <SelectTrigger className="w-48">
+                    <SelectValue placeholder="Select program" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {console.log('Rendering program filter with programs:', availablePrograms)}
+                    {availablePrograms.map((program) => (
+                      <SelectItem key={program.id} value={program.id.toString()}>
+                        {program.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <div className="relative">
@@ -436,107 +468,113 @@ export default function ArticlesPage() {
         {/* Content */}
         {!loading && (
           <>
-            {viewMode === 'timeline' ? (
-              renderTimelineView()
+            {articles.length === 0 ? (
+              renderNoArticlesMessage()
             ) : (
-              <div className="flex-1 overflow-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
-                          ARTICLE
-                        </div>
-                      </th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">AUTHOR</th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">CATEGORY</th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">VIEWS</th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">LANGUAGES</th>
-                      <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        <div className="flex items-center gap-1">
-                          LAST MODIFIED
-                          <ChevronUp className="w-3 h-3" />
-                        </div>
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {articles.map((article) => (
-                      <tr key={article.id} className="hover:bg-gray-50 group relative">
-                        <td className="p-4">
-                          <div className="flex items-center gap-3">
-                            <Checkbox
-                              checked={selectedArticles.some((a) => a.id === article.id)}
-                              onCheckedChange={(e) => {
-                                e.stopPropagation()
-                                toggleArticleSelection(article.id)
-                              }}
-                            />
-                            <Link href={`/articles/edit/${article.id}`} className="flex-1">
-                            <div>
-                              <div className="font-medium text-gray-900">{article.title}</div>
-                              <div className="text-sm text-gray-500">ID: {article.id}</div>
+              <>
+                {viewMode === 'timeline' ? (
+                  renderTimelineView()
+                ) : (
+                  <div className="flex-1 overflow-auto">
+                    <table className="w-full">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <div className="flex items-center gap-2">
+                              <FileText className="w-4 h-4" />
+                              ARTICLE
                             </div>
-                            </Link>
-                          </div>
-                        </td>
-                        <td className="p-4">
-                          <Link href={`/articles/edit/${article.id}`} className="block">
-                          <div className="flex items-center gap-2">
-                            <Avatar className="w-6 h-6">
-                              <AvatarFallback className="text-xs">
-                                {article.author
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span className="text-sm text-gray-900">{article.author}</span>
-                          </div>
-                          </Link>
-                        </td>
-                        <td className="p-4">
-                          <Link href={`/articles/edit/${article.id}`} className="block">
-                          <Badge variant="secondary" className={getCategoryColor(article.category)}>
-                            {article.category}
-                          </Badge>
-                          </Link>
-                        </td>
-                        <td className="p-4">
-                          <Link href={`/articles/edit/${article.id}`} className="block">
-                          <Badge variant="secondary" className={getStatusColor(article.status)}>
-                            {article.status.replace("_", " ")}
-                          </Badge>
-                          </Link>
-                        </td>
-                        <td className="p-4">
-                          <Link href={`/articles/edit/${article.id}`} className="block">
-                          <div className="flex items-center gap-1">
-                            <Eye className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-900">{article.views}</span>
-                          </div>
-                          </Link>
-                        </td>
-                        <td className="p-4">
-                          <Link href={`/articles/edit/${article.id}`} className="block">
-                          <div className="flex items-center gap-1">
-                            <Globe className="w-4 h-4 text-gray-400" />
-                            <span className="text-sm text-gray-900">{article.languages}</span>
-                          </div>
-                          </Link>
-                        </td>
-                        <td className="p-4">
-                          <Link href={`/articles/edit/${article.id}`} className="block">
-                          <span className="text-sm text-gray-500">{article.lastModified}</span>
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                          </th>
+                          <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">AUTHOR</th>
+                          <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">CATEGORY</th>
+                          <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
+                          <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">VIEWS</th>
+                          <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">LANGUAGES</th>
+                          <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <div className="flex items-center gap-1">
+                              LAST MODIFIED
+                              <ChevronUp className="w-3 h-3" />
+                            </div>
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {articles.map((article) => (
+                          <tr key={article.id} className="hover:bg-gray-50 group relative">
+                            <td className="p-4">
+                              <div className="flex items-center gap-3">
+                                <Checkbox
+                                  checked={selectedArticles.some((a) => a.id === article.id)}
+                                  onCheckedChange={(e) => {
+                                    e.stopPropagation()
+                                    toggleArticleSelection(article.id)
+                                  }}
+                                />
+                                <Link href={`/articles/edit/${article.id}`} className="flex-1">
+                                <div>
+                                  <div className="font-medium text-gray-900">{article.title}</div>
+                                  <div className="text-sm text-gray-500">ID: {article.id}</div>
+                                </div>
+                                </Link>
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <Link href={`/articles/edit/${article.id}`} className="block">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="w-6 h-6">
+                                  <AvatarFallback className="text-xs">
+                                    {article.author
+                                      .split(" ")
+                                      .map((n) => n[0])
+                                      .join("")}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-sm text-gray-900">{article.author}</span>
+                              </div>
+                              </Link>
+                            </td>
+                            <td className="p-4">
+                              <Link href={`/articles/edit/${article.id}`} className="block">
+                              <Badge variant="secondary" className={getCategoryColor(article.category)}>
+                                {article.category}
+                              </Badge>
+                              </Link>
+                            </td>
+                            <td className="p-4">
+                              <Link href={`/articles/edit/${article.id}`} className="block">
+                              <Badge variant="secondary" className={getStatusColor(article.status)}>
+                                {article.status.replace("_", " ")}
+                              </Badge>
+                              </Link>
+                            </td>
+                            <td className="p-4">
+                              <Link href={`/articles/edit/${article.id}`} className="block">
+                              <div className="flex items-center gap-1">
+                                <Eye className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-900">{article.views}</span>
+                              </div>
+                              </Link>
+                            </td>
+                            <td className="p-4">
+                              <Link href={`/articles/edit/${article.id}`} className="block">
+                              <div className="flex items-center gap-1">
+                                <Globe className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-900">{article.languages}</span>
+                              </div>
+                              </Link>
+                            </td>
+                            <td className="p-4">
+                              <Link href={`/articles/edit/${article.id}`} className="block">
+                              <span className="text-sm text-gray-500">{article.lastModified}</span>
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
