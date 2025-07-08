@@ -50,6 +50,8 @@ import { Separator } from "@/components/ui/separator"
 import { TranslationEditModal } from "@/components/TranslationEditModal"
 import { InitialTranslationModal } from "@/components/InitialTranslationModal"
 import { createArticleFromWizard, CreateArticleData, getArticleCategoriesForDropdown, ArticleCategory } from "@/actions/article-actions"
+import { fetchUserOrganizationProgramsSafe } from "@/actions/program-actions"
+import { useAuth } from "@/lib/auth-context"
 
 const languages = [
   { code: "en", name: "English", flag: "🇺🇸" },
@@ -169,10 +171,14 @@ export default function NewArticlePage() {
   const [translations, setTranslations] = useState<Record<string, ArticleCreatorTranslation>>({})
   const [categories, setCategories] = useState<ArticleCategory[]>([])
   const [isLoadingCategories, setIsLoadingCategories] = useState(false)
+  const [programs, setPrograms] = useState<Array<{id: number, name: string}>>([])
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(false)
+  const { user } = useAuth()
 
-  // Load categories on component mount
+  // Load categories and programs on component mount
   useEffect(() => {
-    const loadCategories = async () => {
+    const loadData = async () => {
+      // Load categories
       setIsLoadingCategories(true)
       try {
         const categoriesData = await getArticleCategoriesForDropdown()
@@ -182,10 +188,58 @@ export default function NewArticlePage() {
       } finally {
         setIsLoadingCategories(false)
       }
+
+      // Load programs from localStorage (same as articles page)
+      setIsLoadingPrograms(true)
+      try {
+        const storedPrograms = localStorage.getItem('currentOrganizationPrograms')
+        if (storedPrograms) {
+          const parsedPrograms = JSON.parse(storedPrograms)
+          const transformedPrograms = parsedPrograms.map((program: any) => ({
+            id: program.program_id,
+            name: program.name
+          }))
+          setPrograms(transformedPrograms)
+          
+          // Set the first program as default if available
+          if (transformedPrograms.length > 0) {
+            setContentForm(prev => ({ ...prev, program_id: transformedPrograms[0].id }))
+            setSettingsForm(prev => ({ ...prev, program_id: transformedPrograms[0].id }))
+          }
+        } else if (user?.organization) {
+          // Fetch programs if not stored
+          const { success, data: fetchedPrograms, error } = await fetchUserOrganizationProgramsSafe({
+            locale: 'en',
+            organization_id: user.organization.id
+          })
+          
+          if (success && fetchedPrograms.length > 0) {
+            // Store programs in localStorage
+            localStorage.setItem('currentOrganizationPrograms', JSON.stringify(fetchedPrograms))
+            
+            const transformedPrograms = fetchedPrograms.map((program: any) => ({
+              id: program.program_id,
+              name: program.name
+            }))
+            
+            setPrograms(transformedPrograms)
+            
+            // Set the first program as default if available
+            if (transformedPrograms.length > 0) {
+              setContentForm(prev => ({ ...prev, program_id: transformedPrograms[0].id }))
+              setSettingsForm(prev => ({ ...prev, program_id: transformedPrograms[0].id }))
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load programs:', error)
+      } finally {
+        setIsLoadingPrograms(false)
+      }
     }
 
-    loadCategories()
-  }, [])
+    loadData()
+  }, [user?.organization])
 
   const handleNext = () => {
     if (currentStep < steps.length - 1) {
@@ -370,41 +424,14 @@ export default function NewArticlePage() {
                   onChange={(e) => setContentForm(prev => ({ ...prev, content: e.target.value }))} 
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="author">Author</Label>
-                  <Select value={contentForm.author} onValueChange={(value) => setContentForm(prev => ({ ...prev, author: value }))}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select author" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="adam">Adam Rogers</SelectItem>
-                      <SelectItem value="mike">Mike Fitzgerald</SelectItem>
-                      <SelectItem value="sarah">Sarah Johnson</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={contentForm.category} onValueChange={(value) => setContentForm(prev => ({ ...prev, category: value }))}>
-                    <SelectTrigger disabled={isLoadingCategories}>
-                      <SelectValue placeholder={isLoadingCategories ? "Loading categories..." : "Select category"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {isLoadingCategories ? (
-                        <SelectItem value="loading" disabled>Loading categories...</SelectItem>
-                      ) : categories.length > 0 ? (
-                        categories.map((category) => (
-                          <SelectItem key={category.id} value={category.id.toString()}>
-                            {category.title}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <SelectItem value="no-categories" disabled>No categories available</SelectItem>
-                      )}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="author">Author</Label>
+                <Input 
+                  id="author"
+                  placeholder="Enter author name" 
+                  value={contentForm.author} 
+                  onChange={(e) => setContentForm(prev => ({ ...prev, author: e.target.value }))} 
+                />
               </div>
             </CardContent>
           </Card>
@@ -579,6 +606,66 @@ export default function NewArticlePage() {
               <CardTitle>Article Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Program and Category Selection */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Article Classification</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="program">Program</Label>
+                    <Select 
+                      value={settingsForm.program_id.toString()} 
+                      onValueChange={(value) => {
+                        const programId = parseInt(value)
+                        setContentForm(prev => ({ ...prev, program_id: programId }))
+                        setSettingsForm(prev => ({ ...prev, program_id: programId }))
+                      }}
+                    >
+                      <SelectTrigger disabled={isLoadingPrograms}>
+                        <SelectValue placeholder={isLoadingPrograms ? "Loading programs..." : "Select program"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isLoadingPrograms ? (
+                          <SelectItem value="loading" disabled>Loading programs...</SelectItem>
+                        ) : programs.length > 0 ? (
+                          programs.map((program) => (
+                            <SelectItem key={program.id} value={program.id.toString()}>
+                              {program.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-programs" disabled>No programs available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">Select which program this article belongs to</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={contentForm.category} onValueChange={(value) => setContentForm(prev => ({ ...prev, category: value }))}>
+                      <SelectTrigger disabled={isLoadingCategories}>
+                        <SelectValue placeholder={isLoadingCategories ? "Loading categories..." : "Select category"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isLoadingCategories ? (
+                          <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                        ) : categories.length > 0 ? (
+                          categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id.toString()}>
+                              {category.title}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-categories" disabled>No categories available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">Select the article category</p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
               {/* Date and Time Settings */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Publishing Schedule</h3>
