@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { useParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -10,6 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { getArticle } from "@/actions/article-actions"
 import {
   ArrowLeft,
   CalendarIcon,
@@ -57,6 +59,7 @@ import {
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
 import { Progress } from "@/components/ui/progress"
+import { Separator } from "@/components/ui/separator"
 import { TranslationEditModal } from "@/components/TranslationEditModal"
 import { InitialTranslationModal } from "@/components/InitialTranslationModal"
 import { ArticleSidebar } from "@/components/articles/ArticleSidebar"
@@ -76,7 +79,10 @@ const languages = [
   { code: "pt", name: "Portuguese", flag: "🇵🇹" },
 ]
 
-export default function NewArticlePage() {
+export default function EditArticlePage() {
+  const params = useParams()
+  const articleId = params.id as string
+  
   const [activeVersion, setActiveVersion] = useState(1)
   const [isPublished, setIsPublished] = useState(false)
   const [enableComments, setEnableComments] = useState(true)
@@ -92,6 +98,121 @@ export default function NewArticlePage() {
   const [selectedLanguageForTranslation, setSelectedLanguageForTranslation] = useState<typeof languages[0] | null>(null)
   const [summary, setSummary] = useState("")
   const [isInitialTranslationModalOpen, setIsInitialTranslationModalOpen] = useState(false)
+  const [articleData, setArticleData] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [author, setAuthor] = useState("")
+  const [category, setCategory] = useState("")
+  
+  // Media form state
+  const [mediaForm, setMediaForm] = useState({
+    thumbnail: "",
+    youtube: "",
+    vimeo: "",
+    humancontact_video: "",
+    qumu: ""
+  })
+  
+  // Settings form state
+  const [settingsForm, setSettingsForm] = useState({
+    is_featured: false,
+    program_id: 58,
+    is_show_track_articles_only: false,
+    article_date_and_time: "",
+    start_date: "",
+    start_time: "",
+    end_date: "",
+    end_time: ""
+  })
+
+  // Fetch article details when component mounts
+  useEffect(() => {
+    console.log('EditArticlePage component mounted, article ID:', articleId)
+    
+    const fetchArticleDetails = async () => {
+      if (!articleId) {
+        console.log('No article ID provided')
+        return
+      }
+      
+      try {
+        setLoading(true)
+        console.log('Fetching article details for ID:', articleId)
+        
+        const response = await getArticle({
+          article_id: parseInt(articleId),
+          locale: 'en'
+        })
+        
+        console.log('Article details API response:', response)
+        
+        if (response && response.data) {
+          const article = response.data
+          setArticleData(article)
+          
+          // Populate form fields with article data
+          setTitle(article.article_name || article.title || '')
+          setSummary(article.summary || '')
+          setContent(article.article_body || '')
+          setAuthor(article.author || article.article_author || '')
+          setCategory(article.category || '')
+          
+          // Populate media form fields
+          if (article.translation) {
+            setMediaForm({
+              thumbnail: article.translation.thumbnail || '',
+              youtube: article.translation.youtube || '',
+              vimeo: article.translation.vimeo || '',
+              humancontact_video: article.translation.humancontact_video || '',
+              qumu: article.translation.qumu || ''
+            })
+          }
+          
+          // Populate settings form fields
+          setSettingsForm({
+            is_featured: article.is_featured === 1 || false,
+            program_id: article.program?.id || 58,
+            is_show_track_articles_only: false, // Default value
+            article_date_and_time: article.article_date_and_time || '',
+            start_date: article.start_date || '',
+            start_time: article.start_time || '',
+            end_date: article.end_date || '',
+            end_time: article.end_time || ''
+          })
+          
+          console.log('Article data populated:', {
+            title: article.article_name || article.title,
+            summary: article.summary,
+            content: article.article_body,
+            author: article.author || article.article_author,
+            category: article.category,
+            media: {
+              thumbnail: article.translation?.thumbnail,
+              youtube: article.translation?.youtube,
+              vimeo: article.translation?.vimeo,
+              humancontact_video: article.translation?.humancontact_video,
+              qumu: article.translation?.qumu
+            },
+            settings: {
+              is_featured: article.is_featured,
+              program_id: article.program?.id,
+              article_date_and_time: article.article_date_and_time,
+              start_date: article.start_date,
+              start_time: article.start_time,
+              end_date: article.end_date,
+              end_time: article.end_time
+            }
+          })
+        }
+      } catch (error) {
+        console.error('Error fetching article details:', error)
+      } finally {
+        setLoading(false)
+        console.log('Article details loading completed')
+      }
+    }
+
+    fetchArticleDetails()
+  }, [articleId])
 
   // Calculate completion status for each section
   const getSectionStatus = () => {
@@ -151,23 +272,43 @@ export default function NewArticlePage() {
             <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="title">Title</Label>
-                <Input id="title" placeholder="Enter article title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                <Input 
+                  id="title" 
+                  placeholder="Enter article title" 
+                  value={title} 
+                  onChange={(e) => setTitle(e.target.value)}
+                  disabled={loading}
+                />
                 <div className="text-xs text-gray-500 mt-1">41/60 characters</div>
               </div>
               <div>
                 <Label htmlFor="summary">Summary</Label>
-                <Textarea id="summary" placeholder="Enter article summary..." className="min-h-[80px]" value={summary} onChange={(e) => setSummary(e.target.value)} />
+                <Textarea 
+                  id="summary" 
+                  placeholder="Enter article summary..." 
+                  className="min-h-[80px]" 
+                  value={summary} 
+                  onChange={(e) => setSummary(e.target.value)}
+                  disabled={loading}
+                />
                 <div className="text-xs text-gray-500 mt-1">248/250 characters</div>
               </div>
               <div>
                 <Label htmlFor="body">Body</Label>
-                <Textarea id="body" placeholder="Write your article content here..." className="min-h-[300px]" value={content} onChange={(e) => setContent(e.target.value)} />
+                <Textarea 
+                  id="body" 
+                  placeholder="Write your article content here..." 
+                  className="min-h-[300px]" 
+                  value={content} 
+                  onChange={(e) => setContent(e.target.value)}
+                  disabled={loading}
+                />
                 <div className="text-xs text-gray-500 mt-1">Rich text editor with formatting options</div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="author">Author</Label>
-                  <Select>
+                  <Select value={author} onValueChange={setAuthor} disabled={loading}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select author" />
                     </SelectTrigger>
@@ -180,7 +321,7 @@ export default function NewArticlePage() {
                 </div>
                 <div>
                   <Label htmlFor="category">Category</Label>
-                  <Select>
+                  <Select value={category} onValueChange={setCategory} disabled={loading}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
                     </SelectTrigger>
@@ -204,30 +345,84 @@ export default function NewArticlePage() {
               <CardTitle>Media Assets</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Video Upload */}
+              {/* Featured Image Upload */}
               <div>
-                <Label className="text-base font-medium">Video (Multi-platform)</Label>
+                <Label className="text-base font-medium">Featured Image</Label>
                 <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-sm text-gray-600 mb-2">Upload video files</p>
-                  <p className="text-xs text-gray-500 mb-4">Supports MP4, MOV, AVI (max 500MB)</p>
-                  <Button variant="outline">
+                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-sm text-gray-600 mb-2">Upload featured image</p>
+                  <p className="text-xs text-gray-500 mb-4">Supports JPG, PNG, WebP (max 10MB)</p>
+                  <Button variant="outline" disabled={loading}>
                     <Upload className="w-4 h-4 mr-2" />
-                    Choose Files
+                    Choose Image
                   </Button>
+                </div>
+                <Input 
+                  placeholder="Or enter image URL" 
+                  value={mediaForm.thumbnail}
+                  onChange={(e) => setMediaForm(prev => ({ ...prev, thumbnail: e.target.value }))}
+                  className="mt-2"
+                  disabled={loading}
+                />
+              </div>
+
+              {/* Video Links */}
+              <div>
+                <Label className="text-base font-medium">Video Links</Label>
+                <div className="space-y-3 mt-2">
+                  <div>
+                    <Label htmlFor="youtube">YouTube URL</Label>
+                    <Input 
+                      id="youtube"
+                      placeholder="https://www.youtube.com/watch?v=..." 
+                      value={mediaForm.youtube}
+                      onChange={(e) => setMediaForm(prev => ({ ...prev, youtube: e.target.value }))}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="vimeo">Vimeo URL</Label>
+                    <Input 
+                      id="vimeo"
+                      placeholder="https://vimeo.com/..." 
+                      value={mediaForm.vimeo}
+                      onChange={(e) => setMediaForm(prev => ({ ...prev, vimeo: e.target.value }))}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="humancontact">HumanContact Video URL</Label>
+                    <Input 
+                      id="humancontact"
+                      placeholder="https://humancontact.com/..." 
+                      value={mediaForm.humancontact_video}
+                      onChange={(e) => setMediaForm(prev => ({ ...prev, humancontact_video: e.target.value }))}
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="qumu">Qumu URL</Label>
+                    <Input 
+                      id="qumu"
+                      placeholder="https://qumu.com/..." 
+                      value={mediaForm.qumu}
+                      onChange={(e) => setMediaForm(prev => ({ ...prev, qumu: e.target.value }))}
+                      disabled={loading}
+                    />
+                  </div>
                 </div>
               </div>
 
-              {/* Images Upload */}
+              {/* Additional Media Upload */}
               <div>
-                <Label className="text-base font-medium">Images</Label>
+                <Label className="text-base font-medium">Additional Media</Label>
                 <div className="mt-2 border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <ImageIcon className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-sm text-gray-600 mb-2">Upload images</p>
-                  <p className="text-xs text-gray-500 mb-4">Supports JPG, PNG, WebP (max 10MB each)</p>
-                  <Button variant="outline">
+                  <Video className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-sm text-gray-600 mb-2">Upload additional media files</p>
+                  <p className="text-xs text-gray-500 mb-4">Supports MP4, MOV, AVI (max 500MB)</p>
+                  <Button variant="outline" disabled={loading}>
                     <Upload className="w-4 h-4 mr-2" />
-                    Choose Images
+                    Choose Files
                   </Button>
                 </div>
               </div>
@@ -242,7 +437,7 @@ export default function NewArticlePage() {
                         <span className="text-lg">{lang.flag}</span>
                         <span className="font-medium">{lang.name}</span>
                       </div>
-                      <Button variant="outline" size="sm">
+                      <Button variant="outline" size="sm" disabled={loading}>
                         <Upload className="w-4 h-4 mr-1" />
                         Upload SRT
                       </Button>
@@ -342,27 +537,117 @@ export default function NewArticlePage() {
             <CardHeader>
               <CardTitle>Article Settings</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">Featured Article</span>
+            <CardContent className="space-y-6">
+              {/* Date and Time Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Publishing Schedule</h3>
+                
+                <div>
+                  <Label htmlFor="article_date_and_time">Article Date and Time</Label>
+                  <Input 
+                    id="article_date_and_time"
+                    type="datetime-local"
+                    value={settingsForm.article_date_and_time}
+                    onChange={(e) => setSettingsForm(prev => ({ ...prev, article_date_and_time: e.target.value }))}
+                    className="mt-1"
+                    disabled={loading}
+                  />
+                  <p className="text-xs text-gray-500 mt-1">When the article should be published</p>
                 </div>
-                <Switch checked={isPublished} onCheckedChange={setIsPublished} />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="start_date">Start Date</Label>
+                    <Input 
+                      id="start_date"
+                      type="date"
+                      value={settingsForm.start_date}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, start_date: e.target.value }))}
+                      className="mt-1"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="start_time">Start Time</Label>
+                    <Input 
+                      id="start_time"
+                      type="time"
+                      value={settingsForm.start_time}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, start_time: e.target.value }))}
+                      className="mt-1"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="end_date">End Date</Label>
+                    <Input 
+                      id="end_date"
+                      type="date"
+                      value={settingsForm.end_date}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, end_date: e.target.value }))}
+                      className="mt-1"
+                      disabled={loading}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="end_time">End Time</Label>
+                    <Input 
+                      id="end_time"
+                      type="time"
+                      value={settingsForm.end_time}
+                      onChange={(e) => setSettingsForm(prev => ({ ...prev, end_time: e.target.value }))}
+                      className="mt-1"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Mail className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">Enable Comments</span>
+
+              <Separator />
+
+              {/* Other Settings */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Article Options</h3>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Target className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium">Featured Article</span>
+                  </div>
+                  <Switch 
+                    checked={settingsForm.is_featured} 
+                    onCheckedChange={(checked) => setSettingsForm(prev => ({ ...prev, is_featured: checked }))} 
+                    disabled={loading}
+                  />
                 </div>
-                <Switch checked={enableComments} onCheckedChange={setEnableComments} />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Globe className="w-4 h-4 text-gray-500" />
-                  <span className="text-sm font-medium">SEO Optimization</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Mail className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium">Enable Comments</span>
+                  </div>
+                  <Switch checked={enableComments} onCheckedChange={setEnableComments} disabled={loading} />
                 </div>
-                <Switch defaultChecked />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Globe className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium">SEO Optimization</span>
+                  </div>
+                  <Switch defaultChecked disabled={loading} />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Lock className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm font-medium">Show Track Articles Only</span>
+                  </div>
+                  <Switch 
+                    checked={settingsForm.is_show_track_articles_only} 
+                    onCheckedChange={(checked) => setSettingsForm(prev => ({ ...prev, is_show_track_articles_only: checked }))} 
+                    disabled={loading}
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -389,9 +674,11 @@ export default function NewArticlePage() {
                 </Button>
               </Link>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-semibold text-gray-900">Edit Article</h1>
+                <h1 className="text-xl font-semibold text-gray-900">
+                  {loading ? 'Loading...' : title || 'Edit Article'}
+                </h1>
                 <Badge variant="secondary" className="bg-gray-100 text-gray-700">
-                  DRAFT
+                  {articleData?.status || 'DRAFT'}
                 </Badge>
               </div>
             </div>
@@ -432,10 +719,22 @@ export default function NewArticlePage() {
           </div>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#05AFF2] mx-auto mb-2"></div>
+              <p className="text-gray-500">Loading article details...</p>
+            </div>
+          </div>
+        )}
+
         {/* Content */}
-        <div className="flex-1 overflow-auto p-6">
-          {renderSection()}
-        </div>
+        {!loading && (
+          <div className="flex-1 overflow-auto p-6">
+            {renderSection()}
+          </div>
+        )}
       </div>
 
       {/* Add TranslationEditModal */}
