@@ -14,6 +14,7 @@ export default function AuthPage() {
   const { signIn, signUp, loading } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -23,16 +24,20 @@ export default function AuthPage() {
 
   // Registration form state
   const [registerData, setRegisterData] = useState({
-    fullName: "",
+    firstName: "",
+    lastName: "",
     email: "",
+    emailConfirmation: "",
     password: "",
     confirmPassword: "",
+    terms: false,
   });
 
   // Handlers
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
 
     if (!loginData.email || !loginData.password) {
       setError("Please fill in all fields");
@@ -49,9 +54,15 @@ export default function AuthPage() {
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
+    setSuccess(null);
 
-    if (!registerData.fullName || !registerData.email || !registerData.password || !registerData.confirmPassword) {
+    if (!registerData.firstName || !registerData.lastName || !registerData.email || !registerData.emailConfirmation || !registerData.password || !registerData.confirmPassword) {
       setError("Please fill in all fields");
+      return;
+    }
+
+    if (registerData.email !== registerData.emailConfirmation) {
+      setError("Email addresses do not match");
       return;
     }
 
@@ -65,15 +76,37 @@ export default function AuthPage() {
       return;
     }
 
+    if (!registerData.terms) {
+      setError("Please accept the terms and conditions");
+      return;
+    }
+
     const result = await signUp(
       registerData.email, 
       registerData.password, 
-      registerData.fullName, 
-      registerData.confirmPassword
+      registerData.firstName, 
+      registerData.lastName,
+      registerData.emailConfirmation,
+      registerData.confirmPassword,
+      registerData.terms
     );
     
     if (result.error) {
       setError(result.error.message || "Registration failed");
+    } else {
+      // Registration successful - show success message and switch to login
+      setSuccess("Registration successful! Please wait for approval before signing in.");
+      setShowRegister(false);
+      // Reset form
+      setRegisterData({
+        firstName: "",
+        lastName: "",
+        email: "",
+        emailConfirmation: "",
+        password: "",
+        confirmPassword: "",
+        terms: false,
+      });
     }
   };
 
@@ -109,6 +142,13 @@ export default function AuthPage() {
           {error && (
             <Alert className="mb-4 w-full max-w-md">
               <AlertDescription className="text-red-600">{error}</AlertDescription>
+            </Alert>
+          )}
+
+          {/* Success Alert */}
+          {success && (
+            <Alert className="mb-4 w-full max-w-md border-green-200 bg-green-50">
+              <AlertDescription className="text-green-600">{success}</AlertDescription>
             </Alert>
           )}
 
@@ -156,21 +196,39 @@ export default function AuthPage() {
               </Button>
               <div className="text-center mt-6 text-base w-full">
                 Are you new?{' '}
-                <button className="text-[#05AFF2] hover:underline" onClick={() => setShowRegister(true)}>Create an Account</button>
+                <button className="text-[#05AFF2] hover:underline" onClick={() => {
+                  setShowRegister(true);
+                  setError(null);
+                  setSuccess(null);
+                }}>Create an Account</button>
               </div>
             </>
           )}
           {/* Registration Form */}
           {showRegister && (
             <form className="flex flex-col gap-4 w-full rounded-lg p-8" onSubmit={handleRegister}>
-              <label className="text-base font-medium text-gray-700">Full Name</label>
-              <Input 
-                type="text" 
-                required 
-                placeholder="John Smith" 
-                value={registerData.fullName} 
-                onChange={e => setRegisterData({ ...registerData, fullName: e.target.value })} 
-              />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-base font-medium text-gray-700">First Name</label>
+                  <Input 
+                    type="text" 
+                    required 
+                    placeholder="John" 
+                    value={registerData.firstName} 
+                    onChange={e => setRegisterData({ ...registerData, firstName: e.target.value })} 
+                  />
+                </div>
+                <div>
+                  <label className="text-base font-medium text-gray-700">Last Name</label>
+                  <Input 
+                    type="text" 
+                    required 
+                    placeholder="Smith" 
+                    value={registerData.lastName} 
+                    onChange={e => setRegisterData({ ...registerData, lastName: e.target.value })} 
+                  />
+                </div>
+              </div>
               <label className="text-base font-medium text-gray-700">Email</label>
               <Input 
                 type="email" 
@@ -178,6 +236,14 @@ export default function AuthPage() {
                 placeholder="you@email.com" 
                 value={registerData.email} 
                 onChange={e => setRegisterData({ ...registerData, email: e.target.value })} 
+              />
+              <label className="text-base font-medium text-gray-700">Confirm Email</label>
+              <Input 
+                type="email" 
+                required 
+                placeholder="you@email.com" 
+                value={registerData.emailConfirmation} 
+                onChange={e => setRegisterData({ ...registerData, emailConfirmation: e.target.value })} 
               />
               <label className="text-base font-medium text-gray-700">Password</label>
               <Input 
@@ -195,6 +261,18 @@ export default function AuthPage() {
                 value={registerData.confirmPassword} 
                 onChange={e => setRegisterData({ ...registerData, confirmPassword: e.target.value })} 
               />
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={registerData.terms}
+                  onChange={e => setRegisterData({ ...registerData, terms: e.target.checked })}
+                  className="rounded border-gray-300 text-[#05AFF2] focus:ring-[#05AFF2]"
+                />
+                <label htmlFor="terms" className="text-sm text-gray-700">
+                  I agree to the <a href="#" className="text-[#05AFF2] hover:underline">Terms and Conditions</a>
+                </label>
+              </div>
               <Button 
                 type="submit" 
                 className="w-full bg-[#05AFF2] hover:bg-[#0486b1] text-white mt-2"
@@ -204,7 +282,11 @@ export default function AuthPage() {
               </Button>
               <div className="text-center mt-4 text-base w-full">
                 Already have an account?{' '}
-                <button className="text-[#05AFF2] hover:underline" onClick={() => setShowRegister(false)}>Sign in</button>
+                <button className="text-[#05AFF2] hover:underline" onClick={() => {
+                  setShowRegister(false);
+                  setError(null);
+                  setSuccess(null);
+                }}>Sign in</button>
               </div>
             </form>
           )}

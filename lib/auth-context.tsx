@@ -36,7 +36,7 @@ type AuthContextType = {
   user: User | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string, fullName: string, confirmPassword: string) => Promise<{ error: any }>
+  signUp: (email: string, password: string, firstName: string, lastName: string, emailConfirmation: string, passwordConfirmation: string, terms: boolean) => Promise<{ error: any }>
   signOut: () => Promise<void>
 }
 
@@ -247,49 +247,50 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const signUp = async (email: string, password: string, fullName: string, confirmPassword: string) => {
+  const signUp = async (email: string, password: string, firstName: string, lastName: string, emailConfirmation: string, passwordConfirmation: string, terms: boolean) => {
     setError(null)
     setLoading(true)
     try {
       // Note: The v3 API documentation doesn't show a register endpoint
       // You may need to check with your backend team for the correct register endpoint
       const data = await apiRequest("/auth/register", "POST", {
-        name: fullName,
+        first_name: firstName,
+        last_name: lastName,
         email,
+        email_confirmation: emailConfirmation,
         password,
-        password_confirmation: confirmPassword,
+        password_confirmation: passwordConfirmation,
+        terms: terms,
         organization_id: 2
       })
 
-      if (data && data.success && data.data && data.data.token) {
-        console.log('Registration successful, token received:', data.data.token)
+      if (data && data.success) {
+        console.log('Registration successful:', data.message)
         
-        const user = {
-          id: data.data.firebase_uuid || '1',
-          email: data.data.email || email,
-          name: data.data.name,
-          token: data.data.token,
-          firebase_uuid: data.data.firebase_uuid,
-          roles: data.data.roles,
-          is_notifications: data.data.is_notifications,
-          profile: null
-        }
-        setUser(user)
-        localStorage.setItem("user", JSON.stringify(user))
-        localStorage.setItem("authToken", data.data.token)
-
-        // Also set token in cookie for middleware
-        document.cookie = `authToken=${data.data.token}; path=/; max-age=${60 * 60 * 24 * 7}` // 7 days
-
-        // Log the stored token for debugging
-        const storedToken = localStorage.getItem('authToken')
-        console.log('Auth token stored in localStorage:', storedToken)
-
-        // Redirect to onboarding for new users
-        router.push("/onboarding")
+        // For successful registration, we don't get a token immediately
+        // The user needs to wait for approval, so we don't set user state
+        // Just show success message and redirect to login
         return { error: null }
       } else {
-        throw new Error("Registration failed")
+        // Handle validation errors
+        if (data && !data.success && data.message) {
+          // Extract error messages from the message array
+          let errorMessage = "Registration failed"
+          if (Array.isArray(data.message)) {
+            // Handle array of validation errors
+            const errorMessages = data.message.map((error: any) => {
+              const field = Object.keys(error)[0]
+              return error[field]
+            }).join(', ')
+            errorMessage = errorMessages
+          } else if (typeof data.message === 'string') {
+            // Handle single error message
+            errorMessage = data.message
+          }
+          throw new Error(errorMessage)
+        } else {
+          throw new Error("Registration failed")
+        }
       }
     } catch (error: any) {
       console.error("Sign-up error:", error)
