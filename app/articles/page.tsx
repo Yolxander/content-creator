@@ -434,8 +434,17 @@ export default function ArticlesPage() {
       return (
         <div className="flex-1 overflow-auto p-6">
           {Object.entries(grouped).map(([category, group]) => (
-            <div key={category} className="mb-8">
-              <h2 className="text-lg font-semibold mb-4">{category}</h2>
+            <div key={category} className="mb-12">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
+                <div>
+                  <h2 className="text-xl font-bold text-gray-900">{category}</h2>
+                  <p className="text-sm text-gray-500 mt-1">{group.length} article{group.length !== 1 ? 's' : ''}</p>
+                </div>
+                <Badge variant="secondary" className={`ml-auto ${getCategoryColor(category)}`}>
+                  {category}
+                </Badge>
+              </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {group.map((article, index) => (
                   <div 
@@ -758,13 +767,23 @@ export default function ArticlesPage() {
                   renderGridView()
                 ) : (
                   <div className="flex-1 overflow-auto">
-                    {groupEnabled ? (
-                      (() => {
-                        const grouped = groupArticlesByCategory(articles);
-                        return Object.entries(grouped).map(([category, group]) => (
-                          <div key={category} className="mb-8">
-                            <h2 className="text-lg font-semibold mb-4">{category}</h2>
-                            <table className="w-full">
+                                         {groupEnabled ? (
+                       (() => {
+                         const grouped = groupArticlesByCategory(articles);
+                         return Object.entries(grouped).map(([category, group]) => (
+                           <div key={category} className="mb-12">
+                             <div className="flex items-center gap-3 mb-6 p-4 bg-gradient-to-r from-gray-50 to-white border border-gray-200 rounded-lg">
+                               <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-600 rounded-full"></div>
+                               <div>
+                                 <h2 className="text-xl font-bold text-gray-900">{category}</h2>
+                                 <p className="text-sm text-gray-500 mt-1">{group.length} article{group.length !== 1 ? 's' : ''}</p>
+                               </div>
+                               <Badge variant="secondary" className={`ml-auto ${getCategoryColor(category)}`}>
+                                 {category}
+                               </Badge>
+                             </div>
+                             <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
+                               <table className="w-full">
                               <thead className="bg-gray-50 border-b border-gray-200">
                                 <tr>
                                   <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -852,10 +871,11 @@ export default function ArticlesPage() {
                                     </td>
                                   </tr>
                                 ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        ));
+                                                             </tbody>
+                             </table>
+                             </div>
+                           </div>
+                         ));
                       })()
                     ) : (
                     <table className="w-full">
