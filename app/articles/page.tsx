@@ -93,6 +93,15 @@ const getCategoryColor = (category: string) => {
   }
 }
 
+// Helper to group articles by category
+const groupArticlesByCategory = (articles: Article[]) => {
+  return articles.reduce((acc: Record<string, Article[]>, article) => {
+    if (!acc[article.category]) acc[article.category] = [];
+    acc[article.category].push(article);
+    return acc;
+  }, {});
+};
+
 export default function ArticlesPage() {
   const { user } = useAuth()
   const [articles, setArticles] = useState<Article[]>(defaultArticles)
@@ -420,6 +429,76 @@ export default function ArticlesPage() {
   }
 
   const renderGridView = () => {
+    if (groupEnabled) {
+      const grouped = groupArticlesByCategory(articles);
+      return (
+        <div className="flex-1 overflow-auto p-6">
+          {Object.entries(grouped).map(([category, group]) => (
+            <div key={category} className="mb-8">
+              <h2 className="text-lg font-semibold mb-4">{category}</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {group.map((article, index) => (
+                  <div 
+                    key={article.id} 
+                    className="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden group"
+                    style={{
+                      animationDelay: `${index * 50}ms`,
+                      animation: 'fadeInUp 0.5s ease-out forwards'
+                    }}
+                  >
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <Checkbox
+                          checked={selectedArticles.some((a) => a.id === article.id)}
+                          onCheckedChange={() => toggleArticleSelection(article.id)}
+                        />
+                        <Badge variant="secondary" className={getStatusColor(article.status)}>
+                          {article.status.replace("_", " ")}
+                        </Badge>
+                      </div>
+                      <Link href={`/articles/edit/${article.id}`} className="block">
+                        <div className="mb-3">
+                          <h3 className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors line-clamp-2 mb-2">
+                            {article.title}
+                          </h3>
+                          <div className="text-sm text-gray-500">ID: {article.id}</div>
+                        </div>
+                        <div className="space-y-2 mb-4">
+                          <div className="flex items-center gap-2 text-sm">
+                            <User className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-700">{article.author}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary" className={getCategoryColor(article.category)}>
+                              {article.category}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Eye className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-700">{article.views} views</span>
+                          </div>
+                          <div className="flex items-center gap-2 text-sm">
+                            <Globe className="w-4 h-4 text-gray-400" />
+                            <span className="text-gray-700">{article.languages} languages</span>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500 border-t pt-2">
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            <span>{article.lastModified}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+    // Existing code for ungrouped grid view
     return (
       <div className="flex-1 overflow-auto p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -679,6 +758,106 @@ export default function ArticlesPage() {
                   renderGridView()
                 ) : (
                   <div className="flex-1 overflow-auto">
+                    {groupEnabled ? (
+                      (() => {
+                        const grouped = groupArticlesByCategory(articles);
+                        return Object.entries(grouped).map(([category, group]) => (
+                          <div key={category} className="mb-8">
+                            <h2 className="text-lg font-semibold mb-4">{category}</h2>
+                            <table className="w-full">
+                              <thead className="bg-gray-50 border-b border-gray-200">
+                                <tr>
+                                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex items-center gap-2">
+                                      <FileText className="w-4 h-4" />
+                                      ARTICLE
+                                    </div>
+                                  </th>
+                                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">AUTHOR</th>
+                                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">CATEGORY</th>
+                                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">STATUS</th>
+                                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">VIEWS</th>
+                                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">LANGUAGES</th>
+                                  <th className="text-left p-4 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <div className="flex items-center gap-1">
+                                      LAST MODIFIED
+                                      <ChevronUp className="w-3 h-3" />
+                                    </div>
+                                  </th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-white divide-y divide-gray-200">
+                                {group.map((article, index) => (
+                                  <tr 
+                                    key={article.id} 
+                                    className="hover:bg-gray-50 group relative transition-all duration-300 ease-in-out"
+                                    style={{
+                                      animationDelay: `${index * 50}ms`,
+                                      animation: 'fadeInUp 0.5s ease-out forwards'
+                                    }}
+                                  >
+                                    <td className="p-4">
+                                      <div className="flex items-center gap-3">
+                                        <Checkbox
+                                          checked={selectedArticles.some((a) => a.id === article.id)}
+                                          onCheckedChange={() => toggleArticleSelection(article.id)}
+                                        />
+                                        <Link href={`/articles/edit/${article.id}`} className="flex-1">
+                                        <div>
+                                          <div className="font-medium text-gray-900">{article.title}</div>
+                                          <div className="text-sm text-gray-500">ID: {article.id}</div>
+                                        </div>
+                                        </Link>
+                                      </div>
+                                    </td>
+                                    <td className="p-4">
+                                      <Link href={`/articles/edit/${article.id}`} className="block">
+                                      <span className="text-sm text-gray-900">{article.author}</span>
+                                      </Link>
+                                    </td>
+                                    <td className="p-4">
+                                      <Link href={`/articles/edit/${article.id}`} className="block">
+                                      <Badge variant="secondary" className={getCategoryColor(article.category)}>
+                                        {article.category}
+                                      </Badge>
+                                      </Link>
+                                    </td>
+                                    <td className="p-4">
+                                      <Link href={`/articles/edit/${article.id}`} className="block">
+                                      <Badge variant="secondary" className={getStatusColor(article.status)}>
+                                        {article.status.replace("_", " ")}
+                                      </Badge>
+                                      </Link>
+                                    </td>
+                                    <td className="p-4">
+                                      <Link href={`/articles/edit/${article.id}`} className="block">
+                                      <div className="flex items-center gap-1">
+                                        <Eye className="w-4 h-4 text-gray-400" />
+                                        <span className="text-sm text-gray-900">{article.views}</span>
+                                      </div>
+                                      </Link>
+                                    </td>
+                                    <td className="p-4">
+                                      <Link href={`/articles/edit/${article.id}`} className="block">
+                                      <div className="flex items-center gap-2">
+                                        <Globe className="w-4 h-4 text-gray-400" />
+                                        <span className="text-sm text-gray-900">{article.languages}</span>
+                                      </div>
+                                      </Link>
+                                    </td>
+                                    <td className="p-4">
+                                      <Link href={`/articles/edit/${article.id}`} className="block">
+                                      <span className="text-sm text-gray-500">{article.lastModified}</span>
+                                      </Link>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        ));
+                      })()
+                    ) : (
                     <table className="w-full">
                       <thead className="bg-gray-50 border-b border-gray-200">
                         <tr>
@@ -769,6 +948,7 @@ export default function ArticlesPage() {
                         ))}
                       </tbody>
                     </table>
+                    )}
                   </div>
                 )}
               </>
