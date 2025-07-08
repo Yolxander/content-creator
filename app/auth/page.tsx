@@ -8,13 +8,17 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import AlertWithProgress from "@/components/AlertWithProgress";
 
 export default function AuthPage() {
   const router = useRouter();
   const { signIn, signUp, loading } = useAuth();
   const [showRegister, setShowRegister] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+  // Unified alert state
+  const [alert, setAlert] = useState<{
+    type: "success" | "error" | "info" | "warning";
+    message: string;
+  } | null>(null);
 
   // Login form state
   const [loginData, setLoginData] = useState({
@@ -36,68 +40,103 @@ export default function AuthPage() {
   // Handlers
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
+    setAlert(null);
 
     if (!loginData.email || !loginData.password) {
-      setError("Please fill in all fields");
+      setAlert({ type: "warning", message: "Please fill in all fields" });
       return;
     }
 
     const result = await signIn(loginData.email, loginData.password);
-    
+
     if (result.error) {
-      setError(result.error.message || "Login failed");
+      let errorMsg = "Login failed";
+      if (typeof result.error === "string") {
+        // Try to parse as JSON
+        try {
+          const errObj = JSON.parse(result.error);
+          if (errObj.message && Array.isArray(errObj.message)) {
+            const firstError = errObj.message[0];
+            const field = Object.keys(firstError)[0];
+            errorMsg = firstError[field];
+          } else if (typeof errObj.message === "string") {
+            errorMsg = errObj.message;
+          } else {
+            errorMsg = result.error;
+          }
+        } catch {
+          errorMsg = result.error;
+        }
+      } else if (typeof result.error.message === "string") {
+        errorMsg = result.error.message;
+      }
+      setAlert({ type: "error", message: errorMsg });
     }
   };
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
+    setAlert(null);
 
     if (!registerData.firstName || !registerData.lastName || !registerData.email || !registerData.emailConfirmation || !registerData.password || !registerData.confirmPassword) {
-      setError("Please fill in all fields");
+      setAlert({ type: "warning", message: "Please fill in all fields" });
       return;
     }
 
     if (registerData.email !== registerData.emailConfirmation) {
-      setError("Email addresses do not match");
+      setAlert({ type: "warning", message: "Email addresses do not match" });
       return;
     }
 
     if (registerData.password !== registerData.confirmPassword) {
-      setError("Passwords do not match");
+      setAlert({ type: "warning", message: "Passwords do not match" });
       return;
     }
 
     if (registerData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setAlert({ type: "warning", message: "Password must be at least 6 characters long" });
       return;
     }
 
     if (!registerData.terms) {
-      setError("Please accept the terms and conditions");
+      setAlert({ type: "warning", message: "Please accept the terms and conditions" });
       return;
     }
 
     const result = await signUp(
-      registerData.email, 
-      registerData.password, 
-      registerData.firstName, 
+      registerData.email,
+      registerData.password,
+      registerData.firstName,
       registerData.lastName,
       registerData.emailConfirmation,
       registerData.confirmPassword,
       registerData.terms
     );
-    
+
     if (result.error) {
-      setError(result.error.message || "Registration failed");
+      let errorMsg = "Registration failed";
+      if (typeof result.error === "string") {
+        try {
+          const errObj = JSON.parse(result.error);
+          if (errObj.message && Array.isArray(errObj.message)) {
+            const firstError = errObj.message[0];
+            const field = Object.keys(firstError)[0];
+            errorMsg = firstError[field];
+          } else if (typeof errObj.message === "string") {
+            errorMsg = errObj.message;
+          } else {
+            errorMsg = result.error;
+          }
+        } catch {
+          errorMsg = result.error;
+        }
+      } else if (typeof result.error.message === "string") {
+        errorMsg = result.error.message;
+      }
+      setAlert({ type: "error", message: errorMsg });
     } else {
-      // Registration successful - show success message and switch to login
-      setSuccess("Registration successful! Please wait for approval before signing in.");
+      setAlert({ type: "success", message: "Registration successful! Please wait for approval before signing in." });
       setShowRegister(false);
-      // Reset form
       setRegisterData({
         firstName: "",
         lastName: "",
@@ -138,18 +177,13 @@ export default function AuthPage() {
             </span>
           </div>
 
-          {/* Error Alert */}
-          {error && (
-            <Alert className="mb-4 w-full max-w-md">
-              <AlertDescription className="text-red-600">{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {/* Success Alert */}
-          {success && (
-            <Alert className="mb-4 w-full max-w-md border-green-200 bg-green-50">
-              <AlertDescription className="text-green-600">{success}</AlertDescription>
-            </Alert>
+          {/* Alert */}
+          {alert && (
+            <AlertWithProgress
+              type={alert.type}
+              message={alert.message}
+              onClose={() => setAlert(null)}
+            />
           )}
 
           {/* Auth Forms */}
@@ -157,18 +191,18 @@ export default function AuthPage() {
             <>
               <form className="flex flex-col gap-4 w-full rounded-lg p-8" onSubmit={handleLogin}>
                 <label className="text-base font-medium text-gray-700">Email</label>
-                <Input 
-                  type="email" 
-                  placeholder="johnsmith@example.com" 
+                <Input
+                  type="email"
+                  placeholder="johnsmith@example.com"
                   className="mb-2"
                   value={loginData.email}
                   onChange={(e) => setLoginData({ ...loginData, email: e.target.value })}
                   required
                 />
                 <label className="text-base font-medium text-gray-700">Password</label>
-                <Input 
-                  type="password" 
-                  placeholder="**********" 
+                <Input
+                  type="password"
+                  placeholder="**********"
                   className="mb-2"
                   value={loginData.password}
                   onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
@@ -177,8 +211,8 @@ export default function AuthPage() {
                 <div className="flex justify-end mb-4">
                   <Link href="#" className="text-[#05AFF2] text-base hover:underline">Forgot password?</Link>
                 </div>
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-[#05AFF2] hover:bg-[#0486b1] text-white"
                   disabled={loading}
                 >
@@ -198,8 +232,7 @@ export default function AuthPage() {
                 Are you new?{' '}
                 <button className="text-[#05AFF2] hover:underline" onClick={() => {
                   setShowRegister(true);
-                  setError(null);
-                  setSuccess(null);
+                  setAlert(null);
                 }}>Create an Account</button>
               </div>
             </>
@@ -210,56 +243,56 @@ export default function AuthPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-base font-medium text-gray-700">First Name</label>
-                  <Input 
-                    type="text" 
-                    required 
-                    placeholder="John" 
-                    value={registerData.firstName} 
-                    onChange={e => setRegisterData({ ...registerData, firstName: e.target.value })} 
+                  <Input
+                    type="text"
+                    required
+                    placeholder="John"
+                    value={registerData.firstName}
+                    onChange={e => setRegisterData({ ...registerData, firstName: e.target.value })}
                   />
                 </div>
                 <div>
                   <label className="text-base font-medium text-gray-700">Last Name</label>
-                  <Input 
-                    type="text" 
-                    required 
-                    placeholder="Smith" 
-                    value={registerData.lastName} 
-                    onChange={e => setRegisterData({ ...registerData, lastName: e.target.value })} 
+                  <Input
+                    type="text"
+                    required
+                    placeholder="Smith"
+                    value={registerData.lastName}
+                    onChange={e => setRegisterData({ ...registerData, lastName: e.target.value })}
                   />
                 </div>
               </div>
               <label className="text-base font-medium text-gray-700">Email</label>
-              <Input 
-                type="email" 
-                required 
-                placeholder="you@email.com" 
-                value={registerData.email} 
-                onChange={e => setRegisterData({ ...registerData, email: e.target.value })} 
+              <Input
+                type="email"
+                required
+                placeholder="you@email.com"
+                value={registerData.email}
+                onChange={e => setRegisterData({ ...registerData, email: e.target.value })}
               />
               <label className="text-base font-medium text-gray-700">Confirm Email</label>
-              <Input 
-                type="email" 
-                required 
-                placeholder="you@email.com" 
-                value={registerData.emailConfirmation} 
-                onChange={e => setRegisterData({ ...registerData, emailConfirmation: e.target.value })} 
+              <Input
+                type="email"
+                required
+                placeholder="you@email.com"
+                value={registerData.emailConfirmation}
+                onChange={e => setRegisterData({ ...registerData, emailConfirmation: e.target.value })}
               />
               <label className="text-base font-medium text-gray-700">Password</label>
-              <Input 
-                type="password" 
-                required 
-                placeholder="Password" 
-                value={registerData.password} 
-                onChange={e => setRegisterData({ ...registerData, password: e.target.value })} 
+              <Input
+                type="password"
+                required
+                placeholder="Password"
+                value={registerData.password}
+                onChange={e => setRegisterData({ ...registerData, password: e.target.value })}
               />
               <label className="text-base font-medium text-gray-700">Confirm Password</label>
-              <Input 
-                type="password" 
-                required 
-                placeholder="Confirm Password" 
-                value={registerData.confirmPassword} 
-                onChange={e => setRegisterData({ ...registerData, confirmPassword: e.target.value })} 
+              <Input
+                type="password"
+                required
+                placeholder="Confirm Password"
+                value={registerData.confirmPassword}
+                onChange={e => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
               />
               <div className="flex items-center space-x-2">
                 <input
@@ -273,8 +306,8 @@ export default function AuthPage() {
                   I agree to the <a href="#" className="text-[#05AFF2] hover:underline">Terms and Conditions</a>
                 </label>
               </div>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 className="w-full bg-[#05AFF2] hover:bg-[#0486b1] text-white mt-2"
                 disabled={loading}
               >
@@ -284,8 +317,7 @@ export default function AuthPage() {
                 Already have an account?{' '}
                 <button className="text-[#05AFF2] hover:underline" onClick={() => {
                   setShowRegister(false);
-                  setError(null);
-                  setSuccess(null);
+                  setAlert(null);
                 }}>Sign in</button>
               </div>
             </form>

@@ -271,9 +271,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error: any) {
       let displayMessage = "Login failed";
-      try {
-        if (error.message && error.message.startsWith("{")) {
-          const errObj = JSON.parse(error.message);
+      let errorString = error.message || error;
+      // Try to extract JSON from error string
+      const jsonStart = errorString.indexOf("{");
+      if (jsonStart !== -1) {
+        try {
+          const errObj = JSON.parse(errorString.slice(jsonStart));
           if (errObj.message && Array.isArray(errObj.message)) {
             const firstError = errObj.message[0];
             const field = Object.keys(firstError)[0];
@@ -283,18 +286,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             } else if (field === 'email' && msg.includes('not found')) {
               displayMessage = 'Email address not found. Please check your email or create a new account.';
             } else if (field === 'password') {
-              displayMessage = 'Incorrect password. Please try again.';
+              displayMessage = msg;
             } else {
               displayMessage = msg;
             }
           } else if (typeof errObj.message === "string") {
             displayMessage = errObj.message;
           }
-        } else if (error.message) {
-          displayMessage = error.message;
+        } catch {
+          displayMessage = errorString;
         }
-      } catch {
-        displayMessage = error.message || "Login failed";
+      } else {
+        displayMessage = errorString;
       }
       setError(displayMessage);
       return { error: { message: displayMessage } };
