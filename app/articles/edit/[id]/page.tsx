@@ -180,6 +180,7 @@ export default function EditArticlePage() {
           setSettingsForm({
             is_featured: article.is_featured === 1 || false,
             program_id: article.program?.id || 58,
+            category_id: article.category?.id?.toString() || '',
             is_show_track_articles_only: false, // Default value
             article_date_and_time: article.article_date_and_time || '',
             start_date: article.start_date || '',
