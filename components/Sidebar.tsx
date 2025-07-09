@@ -98,7 +98,7 @@ export function Sidebar() {
               pathname === item.href && 'bg-gray-100 text-gray-900'
             )}
           >
-            <item.icon className="h-4 w-4" />
+            <item.icon className="h-4 w-4 flex-shrink-0" />
             {!isCollapsed && item.title}
           </Link>
         ))}
@@ -114,7 +114,7 @@ export function Sidebar() {
             variant={isActive("/admin/tools") ? "secondary" : "ghost"}
             className="w-full justify-start"
           >
-            <Shield className="w-4 h-4 mr-2" />
+            <Shield className="w-4 h-4 mr-2 flex-shrink-0" />
             {!isCollapsed && "Reviewer Tool"}
           </Button>
         </Link>
@@ -123,7 +123,7 @@ export function Sidebar() {
             variant={isActive("/settings") ? "secondary" : "ghost"}
             className="w-full justify-start"
           >
-            <Settings className="w-4 h-4 mr-2" />
+            <Settings className="w-4 h-4 mr-2 flex-shrink-0" />
             {!isCollapsed && "Settings"}
           </Button>
         </Link>
