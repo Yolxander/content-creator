@@ -105,7 +105,6 @@ export default function EditArticlePage() {
   const [articleData, setArticleData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [author, setAuthor] = useState("")
-  const [category, setCategory] = useState("")
   const [programs, setPrograms] = useState<Array<{id: number, name: string}>>([])
   const [categories, setCategories] = useState<any[]>([])
   const [isLoadingPrograms, setIsLoadingPrograms] = useState(false)
@@ -163,7 +162,6 @@ export default function EditArticlePage() {
           setSummary(article.summary || '')
           setContent(article.article_body || '')
           setAuthor(article.author || article.article_author || '')
-          setCategory(article.category?.id?.toString() || '')
           
           // Populate media form fields
           if (article.translation) {
@@ -590,7 +588,11 @@ export default function EditArticlePage() {
                       value={settingsForm.program_id.toString()} 
                       onValueChange={(value) => {
                         const programId = parseInt(value)
-                        setSettingsForm(prev => ({ ...prev, program_id: programId }))
+                        setSettingsForm(prev => ({ 
+                          ...prev, 
+                          program_id: programId,
+                          category_id: '' // Reset category when program changes
+                        }))
                       }}
                       disabled={loading || isLoadingPrograms}
                     >
@@ -615,7 +617,11 @@ export default function EditArticlePage() {
                   </div>
                   <div>
                     <Label htmlFor="category">Category</Label>
-                    <Select value={category} onValueChange={setCategory} disabled={loading || isLoadingCategories}>
+                    <Select 
+                      value={settingsForm.category_id} 
+                      onValueChange={(value) => setSettingsForm(prev => ({ ...prev, category_id: value }))} 
+                      disabled={loading || isLoadingCategories}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder={isLoadingCategories ? "Loading categories..." : "Select category"} />
                       </SelectTrigger>
