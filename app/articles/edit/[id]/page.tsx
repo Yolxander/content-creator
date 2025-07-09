@@ -12,6 +12,8 @@ import { Switch } from "@/components/ui/switch"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getArticle } from "@/actions/article-actions"
+import { fetchUserOrganizationProgramsSafe } from "@/actions/program-actions"
+import { getArticleCategoriesForDropdown } from "@/actions/article-actions"
 import {
   ArrowLeft,
   CalendarIcon,
@@ -55,6 +57,7 @@ import {
   Filter,
   AlertCircle,
   Trash2,
+  User,
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
@@ -98,10 +101,15 @@ export default function EditArticlePage() {
   const [selectedLanguageForTranslation, setSelectedLanguageForTranslation] = useState<typeof languages[0] | null>(null)
   const [summary, setSummary] = useState("")
   const [isInitialTranslationModalOpen, setIsInitialTranslationModalOpen] = useState(false)
+  const [isTranslationOptionsModalOpen, setIsTranslationOptionsModalOpen] = useState(false)
   const [articleData, setArticleData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [author, setAuthor] = useState("")
   const [category, setCategory] = useState("")
+  const [programs, setPrograms] = useState<Array<{id: number, name: string}>>([])
+  const [categories, setCategories] = useState<any[]>([])
+  const [isLoadingPrograms, setIsLoadingPrograms] = useState(false)
+  const [isLoadingCategories, setIsLoadingCategories] = useState(false)
   
   // Media form state
   const [mediaForm, setMediaForm] = useState({
@@ -116,6 +124,7 @@ export default function EditArticlePage() {
   const [settingsForm, setSettingsForm] = useState({
     is_featured: false,
     program_id: 58,
+    category_id: "",
     is_show_track_articles_only: false,
     article_date_and_time: "",
     start_date: "",
@@ -154,7 +163,7 @@ export default function EditArticlePage() {
           setSummary(article.summary || '')
           setContent(article.article_body || '')
           setAuthor(article.author || article.article_author || '')
-          setCategory(article.category || '')
+          setCategory(article.category?.id?.toString() || '')
           
           // Populate media form fields
           if (article.translation) {
@@ -214,6 +223,45 @@ export default function EditArticlePage() {
     fetchArticleDetails()
   }, [articleId])
 
+  // Load programs and categories
+  useEffect(() => {
+    const loadData = async () => {
+      // Load programs from localStorage (same as articles page)
+      setIsLoadingPrograms(true)
+      try {
+        const storedPrograms = localStorage.getItem('currentOrganizationPrograms')
+        if (storedPrograms) {
+          const parsedPrograms = JSON.parse(storedPrograms)
+          const transformedPrograms = parsedPrograms.map((program: any) => ({
+            id: program.program_id,
+            name: program.name
+          }))
+          setPrograms(transformedPrograms)
+        }
+      } catch (error) {
+        console.error('Failed to load programs:', error)
+      } finally {
+        setIsLoadingPrograms(false)
+      }
+
+      // Load categories based on selected program
+      setIsLoadingCategories(true)
+      try {
+        if (settingsForm.program_id) {
+          const categoriesData = await getArticleCategoriesForDropdown(settingsForm.program_id, 'en')
+          setCategories(categoriesData)
+        }
+      } catch (error) {
+        console.error('Failed to load categories:', error)
+        setCategories([])
+      } finally {
+        setIsLoadingCategories(false)
+      }
+    }
+
+    loadData()
+  }, [settingsForm.program_id])
+
   // Calculate completion status for each section
   const getSectionStatus = () => {
     const status = {
@@ -255,6 +303,20 @@ export default function EditArticlePage() {
     console.log("Initial translation completed")
   }
 
+  const handleManualTranslation = () => {
+    setIsTranslationOptionsModalOpen(false)
+    if (selectedLanguageForTranslation) {
+      setIsTranslationModalOpen(true)
+    }
+  }
+
+  const handleAITranslation = async () => {
+    setIsTranslationOptionsModalOpen(false)
+    if (selectedLanguageForTranslation) {
+      setIsInitialTranslationModalOpen(true)
+    }
+  }
+
   const renderSection = () => {
     switch (activeSection) {
       case 'content':
@@ -294,46 +356,25 @@ export default function EditArticlePage() {
                 <div className="text-xs text-gray-500 mt-1">248/250 characters</div>
               </div>
               <div>
-                <Label htmlFor="body">Body</Label>
+                <Label htmlFor="body">Content</Label>
                 <Textarea 
                   id="body" 
-                  placeholder="Write your article content here..." 
-                  className="min-h-[300px]" 
+                  placeholder="Write your article content..." 
+                  className="min-h-[200px]" 
                   value={content} 
                   onChange={(e) => setContent(e.target.value)}
                   disabled={loading}
                 />
-                <div className="text-xs text-gray-500 mt-1">Rich text editor with formatting options</div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="author">Author</Label>
-                  <Select value={author} onValueChange={setAuthor} disabled={loading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select author" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="adam">Adam Rogers</SelectItem>
-                      <SelectItem value="mike">Mike Fitzgerald</SelectItem>
-                      <SelectItem value="sarah">Sarah Johnson</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="category">Category</Label>
-                  <Select value={category} onValueChange={setCategory} disabled={loading}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="marketing">Marketing</SelectItem>
-                      <SelectItem value="strategy">Strategy</SelectItem>
-                      <SelectItem value="seo">SEO</SelectItem>
-                      <SelectItem value="video">Video</SelectItem>
-                      <SelectItem value="social">Social Media</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="author">Author</Label>
+                <Input 
+                  id="author"
+                  placeholder="Enter author name" 
+                  value={author} 
+                  onChange={(e) => setAuthor(e.target.value)} 
+                  disabled={loading}
+                />
               </div>
             </CardContent>
           </Card>
@@ -502,7 +543,7 @@ export default function EditArticlePage() {
                               setIsTranslationModalOpen(true)
                             } else {
                               setSelectedLanguageForTranslation(lang)
-                              setIsInitialTranslationModalOpen(true)
+                              setIsTranslationOptionsModalOpen(true)
                             }
                           }}
                         >
@@ -538,6 +579,66 @@ export default function EditArticlePage() {
               <CardTitle>Article Settings</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
+              {/* Program and Category Selection */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-medium">Article Classification</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="program">Program</Label>
+                    <Select 
+                      value={settingsForm.program_id.toString()} 
+                      onValueChange={(value) => {
+                        const programId = parseInt(value)
+                        setSettingsForm(prev => ({ ...prev, program_id: programId }))
+                      }}
+                      disabled={loading || isLoadingPrograms}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingPrograms ? "Loading programs..." : "Select program"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isLoadingPrograms ? (
+                          <SelectItem value="loading" disabled>Loading programs...</SelectItem>
+                        ) : programs.length > 0 ? (
+                          programs.map((program) => (
+                            <SelectItem key={program.id} value={program.id.toString()}>
+                              {program.name}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-programs" disabled>No programs available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">Select which program this article belongs to</p>
+                  </div>
+                  <div>
+                    <Label htmlFor="category">Category</Label>
+                    <Select value={category} onValueChange={setCategory} disabled={loading || isLoadingCategories}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingCategories ? "Loading categories..." : "Select category"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {isLoadingCategories ? (
+                          <SelectItem value="loading" disabled>Loading categories...</SelectItem>
+                        ) : categories.length > 0 ? (
+                          categories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id.toString()}>
+                              {cat.title}
+                            </SelectItem>
+                          ))
+                        ) : (
+                          <SelectItem value="no-categories" disabled>No categories available</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500 mt-1">Select the article category</p>
+                  </div>
+                </div>
+              </div>
+
+              <Separator />
+
               {/* Date and Time Settings */}
               <div className="space-y-4">
                 <h3 className="text-lg font-medium">Publishing Schedule</h3>
@@ -764,6 +865,75 @@ export default function EditArticlePage() {
           language={selectedLanguageForTranslation}
           onTranslate={handleInitialTranslate}
         />
+      )}
+
+      {/* Translation Options Modal */}
+      {selectedLanguageForTranslation && (
+        <div className={`fixed inset-0 z-50 flex items-center justify-center ${isTranslationOptionsModalOpen ? 'block' : 'hidden'}`}>
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsTranslationOptionsModalOpen(false)} />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">{selectedLanguageForTranslation.flag}</span>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Translate to {selectedLanguageForTranslation.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Choose how you want to translate this article
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-auto p-4"
+                  onClick={handleManualTranslation}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <User className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">Manual Translation</div>
+                      <div className="text-sm text-gray-600">
+                        Translate the content yourself with full control
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-auto p-4"
+                  onClick={handleAITranslation}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <Sparkles className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">AI Auto-Translate</div>
+                      <div className="text-sm text-gray-600">
+                        Use AI to automatically translate the content
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              </div>
+              
+              <div className="mt-6 flex justify-end">
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsTranslationOptionsModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
