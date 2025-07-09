@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Sparkles } from "lucide-react"
+import { Sparkles, Languages } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 
 interface TranslationEditModalProps {
   isOpen: boolean
@@ -62,111 +64,159 @@ export function TranslationEditModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <span className="text-xl">{language.flag}</span>
-            Edit {language.name} Translation
+      <DialogContent className="max-w-6xl max-h-[85vh] flex flex-col">
+        <DialogHeader className="pb-0 flex-shrink-0">
+          <DialogTitle className="flex items-center gap-3 text-xl">
+            <span className="text-2xl">{language.flag}</span>
+            <div>
+              <div className="font-semibold">Edit {language.name} Translation</div>
+              <div className="text-sm font-normal text-gray-600">Translate your article content</div>
+            </div>
           </DialogTitle>
         </DialogHeader>
 
-        <div className="grid grid-cols-2 gap-6">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="grid grid-cols-2 gap-8">
           {/* Original Content */}
-          <div className="space-y-4">
-            <h3 className="font-medium">Original Content</h3>
-            <div className="space-y-2">
-              <Label>Title</Label>
-              <Input value={originalTitle} disabled />
-              <div className="text-xs text-gray-500">{originalTitle.length}/60 characters</div>
-            </div>
-            <div className="space-y-2">
-              <Label>Summary</Label>
-              <Textarea value={originalSummary} disabled className="min-h-[80px]" />
-              <div className="text-xs text-gray-500">{originalSummary.length}/250 characters</div>
-            </div>
-            <div className="space-y-2">
-              <Label>Body</Label>
-              <Textarea value={originalContent} disabled className="min-h-[300px]" />
-            </div>
-          </div>
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Languages className="w-5 h-5 text-gray-500" />
+                Original Content
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <Label htmlFor="original-title" className="text-sm font-medium">Title</Label>
+                <Input 
+                  id="original-title"
+                  value={originalTitle} 
+                  disabled 
+                  className="mt-2 bg-gray-50 border-gray-200"
+                />
+                <div className="text-xs text-gray-500 mt-1">{originalTitle.length}/60 characters</div>
+              </div>
+              
+              <div>
+                <Label htmlFor="original-summary" className="text-sm font-medium">Summary</Label>
+                <Textarea 
+                  id="original-summary"
+                  value={originalSummary} 
+                  disabled 
+                  className="mt-2 min-h-[80px] bg-gray-50 border-gray-200 resize-none"
+                />
+                <div className="text-xs text-gray-500 mt-1">{originalSummary.length}/250 characters</div>
+              </div>
+              
+              <div>
+                <Label htmlFor="original-content" className="text-sm font-medium">Content</Label>
+                <Textarea 
+                  id="original-content"
+                  value={originalContent} 
+                  disabled 
+                  className="mt-2 min-h-[300px] bg-gray-50 border-gray-200 resize-none"
+                />
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Translation */}
-          <div className="space-y-4">
-            <h3 className="font-medium">Translation</h3>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Title</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => translateField("title")}
-                  disabled={isTranslating === "title"}
-                  className="h-8"
-                >
-                  <Sparkles className="w-4 h-4 mr-1" />
-                  {isTranslating === "title" ? "Translating..." : "Translate Again"}
-                </Button>
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <span className="text-xl">{language.flag}</span>
+                {language.name} Translation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="translated-title" className="text-sm font-medium">Title</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => translateField("title")}
+                    disabled={isTranslating === "title"}
+                    className="h-8 text-xs"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    {isTranslating === "title" ? "Translating..." : "Auto-translate"}
+                  </Button>
+                </div>
+                <Input
+                  id="translated-title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  placeholder="Enter translated title"
+                  maxLength={60}
+                  className="mt-1"
+                />
+                <div className="text-xs text-gray-500 mt-1">{title.length}/60 characters</div>
               </div>
-              <Input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                placeholder="Enter translated title"
-                maxLength={60}
-              />
-              <div className="text-xs text-gray-500">{title.length}/60 characters</div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Summary</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => translateField("summary")}
-                  disabled={isTranslating === "summary"}
-                  className="h-8"
-                >
-                  <Sparkles className="w-4 h-4 mr-1" />
-                  {isTranslating === "summary" ? "Translating..." : "Translate Again"}
-                </Button>
+              
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="translated-summary" className="text-sm font-medium">Summary</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => translateField("summary")}
+                    disabled={isTranslating === "summary"}
+                    className="h-8 text-xs"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    {isTranslating === "summary" ? "Translating..." : "Auto-translate"}
+                  </Button>
+                </div>
+                <Textarea
+                  id="translated-summary"
+                  value={summary}
+                  onChange={(e) => setSummary(e.target.value)}
+                  placeholder="Enter translated summary..."
+                  className="mt-1 min-h-[80px] resize-none"
+                  maxLength={250}
+                />
+                <div className="text-xs text-gray-500 mt-1">{summary.length}/250 characters</div>
               </div>
-              <Textarea
-                value={summary}
-                onChange={(e) => setSummary(e.target.value)}
-                placeholder="Enter translated summary..."
-                className="min-h-[80px]"
-                maxLength={250}
-              />
-              <div className="text-xs text-gray-500">{summary.length}/250 characters</div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>Body</Label>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => translateField("content")}
-                  disabled={isTranslating === "content"}
-                  className="h-8"
-                >
-                  <Sparkles className="w-4 h-4 mr-1" />
-                  {isTranslating === "content" ? "Translating..." : "Translate Again"}
-                </Button>
+              
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label htmlFor="translated-content" className="text-sm font-medium">Content</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => translateField("content")}
+                    disabled={isTranslating === "content"}
+                    className="h-8 text-xs"
+                  >
+                    <Sparkles className="w-3 h-3 mr-1" />
+                    {isTranslating === "content" ? "Translating..." : "Auto-translate"}
+                  </Button>
+                </div>
+                <Textarea
+                  id="translated-content"
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="Write your translated content here..."
+                  className="mt-1 min-h-[300px] resize-none"
+                />
               </div>
-              <Textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Write your translated content here..."
-                className="min-h-[300px]"
-              />
-            </div>
+            </CardContent>
+          </Card>
           </div>
         </div>
 
-        <div className="flex justify-end gap-2">
+
+        <div className="flex justify-end gap-3 h-[50px] border-t-[1px] border-gray-300 pt-2">
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save Translation</Button>
+          <Button 
+            onClick={handleSave}
+            className="bg-[#05AFF2] hover:bg-[#05AFF2]/90"
+          >
+            Save Translation
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

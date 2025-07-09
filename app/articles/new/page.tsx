@@ -44,6 +44,7 @@ import {
   ChevronLeft,
   ChevronUp,
   ChevronDown,
+  User,
 } from "lucide-react"
 import Link from "next/link"
 import { Sidebar } from "@/components/Sidebar"
@@ -133,6 +134,7 @@ export default function NewArticlePage() {
   const [isTranslationModalOpen, setIsTranslationModalOpen] = useState(false)
   const [selectedLanguageForTranslation, setSelectedLanguageForTranslation] = useState<typeof languages[0] | null>(null)
   const [isInitialTranslationModalOpen, setIsInitialTranslationModalOpen] = useState(false)
+  const [isTranslationOptionsModalOpen, setIsTranslationOptionsModalOpen] = useState(false)
   
   // New state for wizard data
   const [wizardData, setWizardData] = useState<WizardData>({
@@ -328,6 +330,20 @@ export default function NewArticlePage() {
         ...prev,
         [selectedLanguageForTranslation.code]: mockTranslation
       }))
+    }
+  }
+
+  const handleManualTranslation = () => {
+    setIsTranslationOptionsModalOpen(false)
+    if (selectedLanguageForTranslation) {
+      setIsTranslationModalOpen(true)
+    }
+  }
+
+  const handleAITranslation = async () => {
+    setIsTranslationOptionsModalOpen(false)
+    if (selectedLanguageForTranslation) {
+      setIsInitialTranslationModalOpen(true)
     }
   }
 
@@ -595,9 +611,12 @@ export default function NewArticlePage() {
                               if (lang.code === "en") {
                                 setSelectedLanguageForTranslation(lang)
                                 setIsTranslationModalOpen(true)
+                              } else if (hasTranslation) {
+                                setSelectedLanguageForTranslation(lang)
+                                setIsTranslationModalOpen(true)
                               } else {
                                 setSelectedLanguageForTranslation(lang)
-                                setIsInitialTranslationModalOpen(true)
+                                setIsTranslationOptionsModalOpen(true)
                               }
                             }}
                           >
@@ -983,6 +1002,75 @@ export default function NewArticlePage() {
           language={selectedLanguageForTranslation}
           onTranslate={handleInitialTranslate}
         />
+      )}
+
+      {/* Translation Options Modal */}
+      {selectedLanguageForTranslation && (
+        <div className={`fixed inset-0 z-50 flex items-center justify-center ${isTranslationOptionsModalOpen ? 'block' : 'hidden'}`}>
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setIsTranslationOptionsModalOpen(false)} />
+          <div className="relative bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-2xl">{selectedLanguageForTranslation.flag}</span>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Translate to {selectedLanguageForTranslation.name}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    Choose how you want to translate this article
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-auto p-4"
+                  onClick={handleManualTranslation}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <User className="w-5 h-5 text-gray-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">Manual Translation</div>
+                      <div className="text-sm text-gray-600">
+                        Translate the content yourself with full control
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  className="w-full justify-start h-auto p-4"
+                  onClick={handleAITranslation}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="flex-shrink-0">
+                      <Sparkles className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div className="text-left">
+                      <div className="font-medium text-gray-900">AI Auto-Translate</div>
+                      <div className="text-sm text-gray-600">
+                        Use AI to automatically translate the content
+                      </div>
+                    </div>
+                  </div>
+                </Button>
+              </div>
+              
+              <div className="mt-6 flex justify-end">
+                <Button
+                  variant="ghost"
+                  onClick={() => setIsTranslationOptionsModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )
