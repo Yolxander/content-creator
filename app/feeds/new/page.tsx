@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -13,6 +13,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Progress } from "@/components/ui/progress"
+import { useToast } from "@/hooks/use-toast"
+import { createSimpleFeed, Feed, FeedContent } from "@/actions/feed-actions"
 import {
   ArrowLeft,
   CalendarIcon,
@@ -150,6 +152,7 @@ const mockFeed = {
 }
 
 export default function NewFeedPage() {
+  const { toast } = useToast()
   const [activeSection, setActiveSection] = useState('details')
   const [activeSubsection, setActiveSubsection] = useState<string | undefined>()
   const [feed, setFeed] = useState(mockFeed)
@@ -163,12 +166,22 @@ export default function NewFeedPage() {
   const [selectedContentType, setSelectedContentType] = useState("articles")
   const [selectedContent, setSelectedContent] = useState([])
   const [searchQuery, setSearchQuery] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [programId, setProgramId] = useState<number>(1) // Default program ID
 
   const handleContentSelect = (content) => {
     if (selectedContent.find((item) => item.id === content.id)) {
       setSelectedContent(selectedContent.filter((item) => item.id !== content.id));
+      toast({
+        title: "Content Removed",
+        description: `${content.title} has been removed from selection`,
+      })
     } else {
       setSelectedContent([...selectedContent, content]);
+      toast({
+        title: "Content Added",
+        description: `${content.title} has been added to selection`,
+      })
     }
   };
 
@@ -192,6 +205,96 @@ export default function NewFeedPage() {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' })
       }
     }
+  }
+
+  const handleSaveFeed = async () => {
+    if (!feed.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a feed name",
+        variant: "destructive",
+      })
+      return
+    }
+
+    if (!feed.description.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a feed description",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      // Prepare content data if any content is selected
+      let contentData: Partial<FeedContent> | undefined
+      if (selectedContent.length > 0) {
+        const firstContent = selectedContent[0]
+        contentData = {
+          title: firstContent.title,
+          description: `Content from ${firstContent.author}`,
+          type: firstContent.id.startsWith('a') ? 'Article' : 'Audio',
+          content_url: `https://example.com/content/${firstContent.id}`,
+          metadata: {
+            author: firstContent.author,
+            date: firstContent.date,
+            status: firstContent.status
+          }
+        }
+      }
+
+      const result = await createSimpleFeed(
+        feed.name,
+        feed.description,
+        programId,
+        contentData
+      )
+
+      if (result.success) {
+        toast({
+          title: "Success",
+          description: "Feed created successfully!",
+        })
+        
+        // Reset form
+        setFeed(mockFeed)
+        setSelectedContent([])
+        setActiveSection('details')
+        
+        // Optionally redirect to feeds list
+        // router.push('/feeds')
+      } else {
+        toast({
+          title: "Error",
+          description: result.error || "Failed to create feed",
+          variant: "destructive",
+        })
+      }
+    } catch (error) {
+      console.error('Error creating feed:', error)
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred while creating the feed",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleCancel = () => {
+    // Reset form
+    setFeed(mockFeed)
+    setSelectedContent([])
+    setActiveSection('details')
+    
+    toast({
+      title: "Cancelled",
+      description: "Feed creation cancelled",
+    })
   }
 
   const renderFeedSection = () => {
@@ -224,6 +327,23 @@ export default function NewFeedPage() {
                   onChange={(e) => setFeed({ ...feed, description: e.target.value })}
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Program</label>
+                <Select value={programId.toString()} onValueChange={(value) => setProgramId(parseInt(value))}>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Select a program" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Program 1</SelectItem>
+                    <SelectItem value="2">Program 2</SelectItem>
+                    <SelectItem value="3">Program 3</SelectItem>
+                    <SelectItem value="4">Program 4</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-sm text-gray-500 mt-1">
+                  Select the program this feed will be associated with
+                </p>
+              </div>
             </div>
           </div>
         );
@@ -249,8 +369,15 @@ export default function NewFeedPage() {
                     </Button>
                       </div>
                     </div>
-                      <div className="space-y-4">
-                  {[...exampleContent.articles, ...exampleContent.audio].map((content) => (
+                                    <div className="space-y-4">
+                {selectedContent.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <FileText className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>No content connected to this feed yet</p>
+                    <p className="text-sm">Select content from the tabs above to add to your feed</p>
+                  </div>
+                ) : (
+                  selectedContent.map((content) => (
                     <div key={content.id} className="flex items-center justify-between p-4 border rounded-lg">
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-3">
@@ -286,15 +413,20 @@ export default function NewFeedPage() {
                           className="text-red-500 hover:text-red-600 hover:bg-red-50"
                           onClick={() => {
                             // Handle detach content
-                            console.log('Detach content:', content.id);
+                            setSelectedContent(selectedContent.filter(item => item.id !== content.id))
+                            toast({
+                              title: "Content Removed",
+                              description: `${content.title} has been removed from the feed`,
+                            })
                           }}
                         >
                           <Trash2 className="h-4 w-4" />
                             </Button>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  ))
+                )}
+              </div>
               </div>
 
               {/* Feed Settings */}
@@ -480,7 +612,7 @@ export default function NewFeedPage() {
                     </div>
               <div className="space-y-2">
                 {exampleContent.articles.map((content) => (
-                  <div key={content.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                  <div key={content.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                             <Checkbox 
                               id={content.id}
                               checked={selectedContent.some((item) => item.id === content.id)}
@@ -521,7 +653,7 @@ export default function NewFeedPage() {
                     </div>
               <div className="space-y-2">
                 {exampleContent.audio.map((content) => (
-                  <div key={content.id} className="flex items-center gap-4 p-4 border rounded-lg">
+                  <div key={content.id} className="flex items-center gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
                     <Checkbox
                       id={content.id}
                       checked={selectedContent.some((item) => item.id === content.id)}
@@ -572,8 +704,26 @@ export default function NewFeedPage() {
               )}
                             </div>
                             <div className="flex items-center gap-2">
-              <Button variant="outline">Cancel</Button>
-              <Button>Save Feed</Button>
+              <Button 
+                variant="outline" 
+                onClick={handleCancel}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSaveFeed}
+                disabled={isLoading || !feed.name.trim() || !feed.description.trim()}
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Creating...
+                  </>
+                ) : (
+                  'Save Feed'
+                )}
+              </Button>
                     </div>
                   </div>
 
@@ -584,6 +734,42 @@ export default function NewFeedPage() {
               <Input placeholder="Search feed settings..." className="pl-9 w-64" />
                       </div>
                     </div>
+
+          {/* Feed Summary */}
+          {activeSection === 'details' && (
+            <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle className="h-4 w-4 text-blue-600" />
+                <h3 className="text-sm font-medium text-blue-900">Feed Summary</h3>
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <span className="text-blue-700">Name:</span>
+                  <span className="ml-2 text-blue-900">
+                    {feed.name || 'Not set'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-blue-700">Program:</span>
+                  <span className="ml-2 text-blue-900">
+                    Program {programId}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-blue-700">Content Items:</span>
+                  <span className="ml-2 text-blue-900">
+                    {selectedContent.length} selected
+                  </span>
+                </div>
+                <div>
+                  <span className="text-blue-700">Status:</span>
+                  <span className="ml-2 text-blue-900">
+                    {feed.name && feed.description ? 'Ready to create' : 'Incomplete'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
                   </div>
 
         {/* Feed Content */}
